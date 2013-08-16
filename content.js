@@ -16,7 +16,7 @@ WeiboAssist.prototype = {
 			'top':200
 		});
 		$(div).animate({
-			'left':0
+			'left':4
 		});
 		var url = location.href;
 		url  = url.split("?");
