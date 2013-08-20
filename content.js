@@ -654,7 +654,7 @@ Weibo.Assist.Notesboard.prototype = {
 }
 
 
-$(function(){
+function main() { 
 	var COMMENT = new Weibo.Assist.Comment();
 	COMMENT.init();
 	var message = new Weibo.Assist.Message();
@@ -664,10 +664,11 @@ $(function(){
 	var notesboard = new Weibo.Assist.Notesboard();
 	notesboard.setComment(COMMENT);
 	notesboard.init();
+}
+main();
 	
 	
 	
-})
 //uiu
 
 
