@@ -432,7 +432,8 @@ Weibo.Assist.Comment.prototype = {
 							repeatNode:'javascript:;',
 							location:'commbox',
 						},function(data) {
-							Weibo.Common.notification('新的评论',det['comment']+';已自动回复！','comment.png');
+							
+							Weibo.Common.notification('新的评论',"“"+det['comment']+'”;已自动回复,内容:“'+'@'+det['content']+' '+replyText+'”','comment.png');
 							$("#pop_box_"+det.cid+" .status").html('回复成功');
 							window.setTimeout(function(){
 								$("#box_container .pop_box").hide()
@@ -517,7 +518,7 @@ Weibo.Assist.Message.prototype = {
 					'_t':0,
 				},
 				function(){
-					Weibo.Common.notification('新的私信',content+';已自动回复！','message.png');
+					Weibo.Common.notification('新的私信',"“"+content+'”;已自动回复,内容:“'+message+'”','message.png');
 					layer.find('.status').html('回复成功！');
 					window.setTimeout(function(){layer.remove();},4000);
 				}.bind(this)
@@ -627,7 +628,7 @@ Weibo.Assist.Notesboard.prototype = {
 			'module':'msglayout',
 			'_t':0
 			},function(data) {
-				Weibo.Common.notification('新未关注私信',d.content+';已自动回复！','note.png');
+				Weibo.Common.notification('新未关注私信',"“"+d.content+'”;已自动回复,内容:“'+this.getReply(d.content)+'”','note.png');
 			}.bind(this)
 		);
 		
