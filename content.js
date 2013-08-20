@@ -181,13 +181,14 @@ Weibo.Assist.Comment.prototype = {
 		keyBox.css({
 			'position':'fixed',
 			'top':200,
-			'width':150,
+			'width':180,
 			'height':'auto',
 			'zIndex':99
 		})
 		
 		
-		$('<div id="key_list_container" style="padding:5px;padding-bottom:10px;"></div>').appendTo(keyBox);
+		$('<ul id="key_list_container" style="padding:5px;padding-bottom:10px;"></ul>').appendTo(keyBox);
+		
 		
 		keyBox.animate({
 			'left':150
@@ -198,6 +199,7 @@ Weibo.Assist.Comment.prototype = {
 		for(var k in this.keyList) {
 			this.keyViewAdd(this.keyList[k].key,this.keyList[k].text,this.keyList[k].keyId);
 		}
+		$("#key_list_container").dragsort();
 		
 	},
 	loadKeyList:function() {
@@ -271,7 +273,7 @@ Weibo.Assist.Comment.prototype = {
 			return;
 		}
 		$("#line_"+keyId).remove();
-		var keyLine = $("<p key='"+key+"' key_id='"+keyId+"' id='line_"+keyId+"'><input class='W_btn_a del' type='button' value='-' style='height:20px;width:20px;' />&nbsp;&nbsp;<input type='button' class='W_btn_b key_word_btn' style='text-align:center;margin-top:5px;width:100px;height:20px;' value='"+key+"' /></p>");
+		var keyLine = $("<li key='"+key+"' key_id='"+keyId+"' id='line_"+keyId+"'><input class='W_btn_a del' type='button' value='-' style='height:20px;width:20px;' />&nbsp;&nbsp;<input type='button' class='W_btn_b key_word_btn' style='text-align:center;margin-top:5px;width:100px;height:20px;' value='"+key+"' />&nbsp;<span>拖</span></li>");
 		keyLine.appendTo($("#key_list_container"));
 		keyLine.find(".del").unbind('click');
 		keyLine.find(".del").click(this.delKey.bind(this));
