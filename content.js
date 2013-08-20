@@ -611,7 +611,7 @@ Weibo.Assist.Notesboard.prototype = {
 		var content =  this.comment.getMessage(content);
 		var t = new Date();
 		var time = t.getHours()+':'+t.getMinutes()+':'+t.getSeconds();
-		return content +'; ('+ time+'发)';
+		return content +' ('+ time+'发)';
 	},
 	reply:function(d) {
 		$.post(
