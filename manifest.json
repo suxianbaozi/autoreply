@@ -17,7 +17,7 @@
   "permissions": [
     "http://*.weibo.com/*",
     "tabs",
-    "http://qiu.guwenzi.org/*",
+    "http://api.wood-spring.com/*",
     "notifications"
   ],
   "background": {

@@ -92,7 +92,7 @@ Weibo.Assist.Comment.prototype = {
 	},
 	loadDefault:function() {
 		
-		$.getJSON('http://qiu.guwenzi.org/api.php?action=get_default',{
+		$.getJSON('http://api.wood-spring.com/api.php?action=get_default',{
 			'uid':this.userId
 		},function(data) {
 			if(!data.error) {
@@ -135,7 +135,7 @@ Weibo.Assist.Comment.prototype = {
 		$("#do_default_key").click(function(e) {
 			this.defaultKey = $("#defaultText").val();
 			
-			$.post('http://qiu.guwenzi.org/api.php?action=set_default',{
+			$.post('http://api.wood-spring.com/api.php?action=set_default',{
 				'text':this.defaultKey,
 				'uid':this.userId
 			},function(data) {
@@ -203,7 +203,7 @@ Weibo.Assist.Comment.prototype = {
 		
 	},
 	loadKeyList:function() {
-		$.getJSON("http://qiu.guwenzi.org/api.php?action=get_key_list",{
+		$.getJSON("http://api.wood-spring.com/api.php?action=get_key_list",{
 			'uid':this.userId
 		},function(data) {
 			for(var i=0;i<data.length;i++) {
@@ -254,7 +254,7 @@ Weibo.Assist.Comment.prototype = {
 		var keyWord  = $("#keyWord").val();
 		var keyText = $("#keyText").val();
 		
-		$.post("http://qiu.guwenzi.org/api.php?action=add_key",{
+		$.post("http://api.wood-spring.com/api.php?action=add_key",{
 			'key':keyWord,
 			'text':keyText,
 			'uid':this.userId
@@ -292,7 +292,7 @@ Weibo.Assist.Comment.prototype = {
 		var key = $(e.currentTarget).parent().attr('key');
 		var keyId = $(e.currentTarget).parent().attr('key_id');
 		delete this.keyList[key];
-		$.getJSON('http://qiu.guwenzi.org/api.php?action=del_key',{
+		$.getJSON('http://api.wood-spring.com/api.php?action=del_key',{
 			'key_id':keyId
 		},function(data) {
 			
@@ -379,7 +379,7 @@ Weibo.Assist.Comment.prototype = {
 			return;
 		}
 		
-		$.post("http://qiu.guwenzi.org/api.php?action=check_comment",{
+		$.post("http://api.wood-spring.com/api.php?action=check_comment",{
 			'list':tempList
 		},function(data){
 			
@@ -596,7 +596,7 @@ Weibo.Assist.Notesboard.prototype = {
 		
 		if(forCheck.length>0) {
 			$.post(
-				'http://qiu.guwenzi.org/api.php?action=check_notes',
+				'http://api.wood-spring.com/api.php?action=check_notes',
 				{
 					'user_id':this.comment.userId,
 					'list':forCheck
