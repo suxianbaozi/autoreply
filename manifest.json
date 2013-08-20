@@ -10,13 +10,23 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://*.weibo.com/u*"],
+      "matches": ["http://*.weibo.com/u*wvr*"],
       "js": ["jquery.js","content.js"]
     }
   ],
   "permissions": [
     "http://*.weibo.com/*",
     "tabs",
-    "http://qiu.guwenzi.org/*"
+    "http://qiu.guwenzi.org/*",
+    "notifications"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "web_accessible_resources": [
+    "icon.png",
+    "comment.png",
+    "message.png",
+    "note.png"
   ]
 }
