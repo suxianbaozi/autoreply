@@ -506,8 +506,7 @@ Weibo.Assist.Message.prototype = {
 		$.get('http://weibo.com/message/history?uid='+uid,{
 			't':new Date().getTime()
 		},function(data) {
-			$.post(
-				'http://weibo.com/aj/message/add?_wv=5&__rnd='+new Date().getTime(),
+			$.post('http://weibo.com/aj/message/add?_wv=5&__rnd='+new Date().getTime(),
                 {
 					'text':message,
 					'uid':uid,
@@ -523,7 +522,7 @@ Weibo.Assist.Message.prototype = {
 					window.setTimeout(function(){layer.remove();},4000);
 				}.bind(this)
 			);
-		}.bind(this),'json');
+		}.bind(this));
 	},
 	getMessage:function(){
 		
