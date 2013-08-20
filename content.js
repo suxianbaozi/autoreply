@@ -173,7 +173,7 @@ Weibo.Assist.Comment.prototype = {
 		addBtn.css({
 			'width':20,
 			'height':20,
-			'margin':10
+			'margin-left':5
 		});
 		addBtn.unbind('click');
 		addBtn.click(this.addKey.bind(this));
