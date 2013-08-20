@@ -507,8 +507,9 @@ Weibo.Assist.Message.prototype = {
 		$.get('http://weibo.com/message/history?uid='+uid,{
 			't':new Date().getTime()
 		},function(data) {
-			$.post('http://weibo.com/aj/message/add?_wv=5&__rnd='+new Date().getTime(),
-                {
+			$.post(
+				'http://weibo.com/aj/message/add?_wv=5&__rnd='+new Date().getTime(),
+				{
 					'text':message,
 					'uid':uid,
 					'fids':'',
