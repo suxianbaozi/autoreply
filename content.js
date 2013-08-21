@@ -107,13 +107,13 @@ Weibo.Assist.Comment.prototype = {
 	showDefaultKey:function(e) {
 		
 		var html =  '<div id="default_key_pop" style="padding:10px;" class="gn_topmenulist">';
-		html += '<div style="margin-top:10px;">';
-		html += '默认回复<textarea id="defaultText" class="W_input" style="height:50px;width:180px;"></textarea>'
+		html += '<div style="margin-top:10px;">默认回复:<br /><br />';
+		html += '<textarea id="defaultText" class="W_input" style="height:50px;width:220px;"></textarea>'
 		html += '</div>';
 		html += '<div style="margin-top:10px;text-align:right;">';
-		html += '<input type=button id="do_default_key" class="W_btn_a" value="保存" style="height:30px;width:40px;" />'
+		html += '<input type=button id="do_default_key" class="W_btn_a" value="保存" style="height:20px;width:40px;" />'
 		html += '&nbsp;&nbsp;';
-		html += '<input type=button id="do_close_key"  class="W_btn_a" value="取消" style="height:30px;width:40px;" />'
+		html += '<input type=button id="do_close_key"  class="W_btn_a" value="取消" style="height:20px;width:40px;" />'
 		html += '</div>'
 		html += '</div>';
 		
@@ -128,7 +128,7 @@ Weibo.Assist.Comment.prototype = {
 			height:130
 		});
 		$("#default_key_pop").animate({
-			left:200
+			left:150
 		});
 		
 		$("#do_default_key").unbind('click');
@@ -180,7 +180,7 @@ Weibo.Assist.Comment.prototype = {
 		
 		keyBox.css({
 			'position':'fixed',
-			'top':200,
+			'top':100,
 			'width':170,
 			'height':'auto',
 			'zIndex':99
@@ -199,8 +199,11 @@ Weibo.Assist.Comment.prototype = {
 		for(var k in this.keyList) {
 			this.keyViewAdd(this.keyList[k].key,this.keyList[k].text,this.keyList[k].keyId);
 		}
-		$("#key_list_container").dragsort();
+		$("#key_list_container").dragsort({ dragEnd:this.adjustSort.bind(this)});
 		
+	},
+	adjustSort:function() {
+		console.log(arguments);
 	},
 	loadKeyList:function() {
 		$.getJSON("http://api.wood-spring.com/api.php?action=get_key_list",{
@@ -215,15 +218,15 @@ Weibo.Assist.Comment.prototype = {
 	addKey:function(e) {
 		var html =  '<div id="add_key_pop" style="padding:10px;" class="gn_topmenulist">';
 		html += '<div>';
-		html += '&nbsp;&nbsp;&nbsp;&nbsp;关键词<input type="text" id="keyWord" class="W_input">';
+		html += '<input placeholder="输入你的关键词..." type="text" id="keyWord" class="W_input">';
 		html += '</div>'
 		html += '<div style="margin-top:10px;">';
-		html += '回复内容<textarea id="keyText" class="W_input" style="height:50px;width:180px;"></textarea>'
+		html += '<textarea id="keyText" placeholder="输入该关键词的回复内容..." class="W_input" style="height:50px;width:220px; padding:5px;"></textarea>'
 		html += '</div>';
 		html += '<div style="margin-top:10px;text-align:right;">';
-		html += '<input type=button id="do_add_key" class="W_btn_a" value="添加" style="height:30px;width:40px;" />'
+		html += '<input type=button id="do_add_key" class="W_btn_a" value="添加" style="height:20px;width:40px;" />'
 		html += '&nbsp;&nbsp;';
-		html += '<input type=button id="do_cancel_key"  class="W_btn_a" value="取消" style="height:30px;width:40px;" />'
+		html += '<input type=button id="do_cancel_key"  class="W_btn_a" value="取消" style="height:20px;width:40px;" />'
 		html += '</div>'
 		
 		html += '</div>';
@@ -232,7 +235,7 @@ Weibo.Assist.Comment.prototype = {
 		
 		$("#add_key_pop").css({
 			left:-300,
-			top:200,
+			top:100,
 			width:300,
 			position:'fixed',
 			height:0,
@@ -364,12 +367,20 @@ Weibo.Assist.Comment.prototype = {
 	},
 	getMessage:function(comment){
 		var replyText = this.defaultKey;
-		for(var k in this.keyList) {
-			if(comment.toUpperCase().indexOf(k.toUpperCase())!='-1') {
-				replyText = this.keyList[k].text;
-                break;
+		
+		var items = [];
+		$("#key_list_container li").each(function(index,item){
+			items.push(item);
+		}.bind(this));
+		
+		for(var i=0;i<items.length;i++) {
+			item = items[i];
+			if(comment.toUpperCase().indexOf($(item).attr('key').toUpperCase())!='-1') {
+				replyText = this.keyList[$(item).attr('key')].text;
+				break;
 			}
 		}
+		
 		return replyText;
 	},
 	createBox:function(replyDetails){
