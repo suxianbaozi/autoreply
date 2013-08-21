@@ -203,7 +203,6 @@ Weibo.Assist.Comment.prototype = {
 		
 	},
 	adjustSort:function() {
-		console.log(arguments);
 	},
 	loadKeyList:function() {
 		$.getJSON("http://api.wood-spring.com/api.php?action=get_key_list",{
@@ -260,15 +259,16 @@ Weibo.Assist.Comment.prototype = {
 		$.post("http://api.wood-spring.com/api.php?action=add_key",{
 			'key':keyWord,
 			'text':keyText,
-			'uid':this.userId
+			'uid':this.userId,
+			'rank':$("#key_list_container li").length
 		},function(data) {
-			this.keyDataAdd(keyWord,keyText,data.key_id);
+			this.keyDataAdd(keyWord,keyText,data.key_id,$("#key_list_container li").length);
 			this.keyViewAdd(keyWord,keyText,data.key_id);
 		}.bind(this),'json');
 		$("#add_key_pop").remove();
 	},
-	keyDataAdd:function(key,text,keyId) {
-		this.keyList[key] = {'key':key,'text':text,'keyId':keyId};
+	keyDataAdd:function(key,text,keyId,rank) {
+		this.keyList[key] = {'key':key,'text':text,'keyId':keyId,'rank':rank};
 	}
 	,
 	keyViewAdd:function(key,text,keyId) {
