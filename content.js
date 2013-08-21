@@ -181,7 +181,7 @@ Weibo.Assist.Comment.prototype = {
 		keyBox.css({
 			'position':'fixed',
 			'top':200,
-			'width':180,
+			'width':170,
 			'height':'auto',
 			'zIndex':99
 		})
@@ -273,7 +273,13 @@ Weibo.Assist.Comment.prototype = {
 			return;
 		}
 		$("#line_"+keyId).remove();
-		var keyLine = $("<li key='"+key+"' key_id='"+keyId+"' id='line_"+keyId+"'><input class='W_btn_a del' type='button' value='-' style='height:20px;width:20px;' />&nbsp;&nbsp;<input type='button' class='W_btn_b key_word_btn' style='text-align:center;margin-top:5px;width:100px;height:20px;' value='"+key+"' />&nbsp;<span>拖</span></li>");
+		
+		var lineHtml = "<li style='height:20px; margin-top:5px;' key='"+key+"' key_id='"+keyId+"' id='line_"+keyId+"'>";
+		lineHtml += "<input class='W_btn_a del' type='button' value='-' style='height:20px;width:20px;' />&nbsp;&nbsp;";
+		lineHtml += "<input type='button' class='W_btn_b key_word_btn' style='line-height:20px;text-align:center;width:100px;height:20px;' value='"+key+"' />&nbsp;";
+		lineHtml += "<img style='line-height:20px;vertical-align:bottom; margin-left:5px;' height=20 src='"+chrome.extension.getURL('drag.png')+"' /></li>";
+		
+		var keyLine = $(lineHtml);
 		keyLine.appendTo($("#key_list_container"));
 		keyLine.find(".del").unbind('click');
 		keyLine.find(".del").click(this.delKey.bind(this));
