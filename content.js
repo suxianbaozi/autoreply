@@ -203,6 +203,22 @@ Weibo.Assist.Comment.prototype = {
 		
 	},
 	adjustSort:function() {
+		var items = [];
+		$("#key_list_container li").each(function(index,item) {
+			this.keyList[$(item).attr('key')]['rank'] = index;
+		}.bind(this));
+		this.syncRank();
+	},
+	syncRank:function(){
+		var data = {};
+		for(var k in this.keyList) {
+			data[this.keyList[k].keyId] = this.keyList[k].rank;
+		}
+		$.post('http://api.wood-spring.com/api.php?action=sync_rank',{
+			'list':data
+		},function(data){
+			
+		});
 	},
 	loadKeyList:function() {
 		$.getJSON("http://api.wood-spring.com/api.php?action=get_key_list",{
