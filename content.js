@@ -2,26 +2,141 @@ var Weibo = {};
 Weibo.Assist = {};
 
 
-
-var PORT = chrome.extension.connect({name: "微博助手"});
-
-PORT.onMessage.addListener(function(msg) {
-});
-
-
-
 Weibo.Common = {
-	'userId':0,
-	'notification':function(title,message,icon) {
+	userId:0,
+	clientId:0,
+	port:null,
+	init:function(){
+		var url = location.href;
+		url  = url.split("?");
+		url = (/(\d+)/.exec(url));
+		this.userId = url[0];
+		Weibo.Im.init(this.main.bind(this));
+		this.port = chrome.extension.connect({name: "微博助手"});
+	},
+	main:function(data) {
+		var COMMENT = new Weibo.Assist.Comment();
+		COMMENT.init();
+		var message = new Weibo.Assist.Message();
+		message.setComment(COMMENT);
+		message.init();
+		var notesboard = new Weibo.Assist.Notesboard();
+		notesboard.setComment(COMMENT);
+		notesboard.init();
+	},
+	notification:function(title,message,icon) {
 		icon = icon || "icon.png";
-		PORT.postMessage({
+		this.port.postMessage({
 			action: "noti",
 			'message':message,
 			'title':title,
 			'icon':icon
-			});
+		});
 	}
 }
+
+Weibo.Im = {
+	msgIndex:1,
+	clientId:0,
+	msg:{},
+	channel:'',
+	server:'',
+	init:function(callback){
+		$.get('http://nas.im.api.weibo.com/im/webim.jsp',{
+			v:'1.1',
+			returntype:'json',
+			uid:Weibo.Common.userId,
+			callback:'Weibo.Im._init'
+		},function(data) {
+			eval(data);
+			callback();
+		},'text');
+	},
+	_init:function(data) {
+		this.channel = data.channel;
+		this.server = data.server;
+	}
+	,
+	imRequest:function(callName,message) {
+		$.get(this.server+'im',{
+			jsonp:callName,
+			message:message,
+			t:new Date().getTime()
+		},
+		function(data) {
+			eval(data);
+		},'text');
+	},
+	sendSuccess:function(){
+		
+	},
+	sended:function(data) {
+		console.log(data);
+		this.sendSuccess(data);
+	},
+	_sendMessage:function(){
+		var message = '[{"channel":"/im/req","data":{"uid":"';
+		message += this.msg['uid'];
+		message += '","seq":"'+this.msg['uid']+'","msg":"';
+		message += this.msg['text']+'","cmd":"msg"},';
+		message += '"id":'+(this.msgIndex++)+',"clientId":"'+this.clientId+'"}]';
+		this.imRequest('Weibo.Im.sended',message);
+	}
+	,
+	sendMessage:function(uid,text,callback) {
+		this.msg['uid'] = uid;
+		this.msg['text'] = text;
+		this.sendSuccess = callback;
+		this.handleShake();
+	},
+	subscribe:function(data){
+		this._sendMessage();
+	},
+	connected:function(data) {
+		console.log('连接成功...');
+		console.log(data);
+		console.log('注册上线...');
+		this.imRequest(
+			'Weibo.Im.subscribe',
+			'[{"channel":"/meta/subscribe",\
+			"subscription":"'+this.channel+'",\
+			"id":'+(this.msgIndex++)+',\
+			"clientId":"'+this.clientId+'"},\
+			{"channel":"/im/req",\
+			"data":{"online":"1","limit":"2000","seq":"min","cmd":"roster"},\
+			"id":'+(this.msgIndex++)+',"clientId":"'+this.clientId+'"}]')
+	},
+	connect:function(callName){
+		this.imRequest(
+			callName,
+			'[{"channel":"/meta/connect",\
+			"connectionType":"callback-polling","id":'+(this.msgIndex++)+',\
+			"clientId":"'+this.clientId+'"}]'
+		)
+	}
+	,
+	handleShakeSuccess:function(data) {
+		console.log('握手成功...');
+		console.log(data);
+		var d = data[0];
+		this.clientId = Weibo.Common.clientId = d.clientId;
+		console.log('连接...');
+		//connect
+		this.connect('Weibo.Im.connected');
+	},
+	handleShake:function(){
+		console.log('握手...');
+		this.imRequest(
+			'Weibo.Im.handleShakeSuccess',
+			'[{"version":"1.0",\
+			"minimumVersion":"0.9",\
+			"channel":"/meta/handshake",\
+			"supportedConnectionTypes":{"0":"callback-polling"},\
+			"id":'+(this.msgIndex++)+'}]'
+		)
+	}
+}
+
 
 Weibo.Assist.Comment = function() {
 	this.userId = 0;
@@ -48,11 +163,7 @@ Weibo.Assist.Comment.prototype = {
 		$(div).animate({
 			'left':4
 		});
-		var url = location.href;
-		url  = url.split("?");
-		url = (/(\d+)/.exec(url));
-		this.userId = url[0];
-		Weibo.Common.userId = this.userId;
+		this.userId = Weibo.Common.userId;
 		$('<div id="box_container"></div>').appendTo($(document.body));
 		$("#box_container").css({
 			'position':'fixed',
@@ -446,35 +557,14 @@ Weibo.Assist.Comment.prototype = {
 					$("#box_container").append(box);
 					
 					$("#pop_box_"+det.cid+" .status").html('自动回复中...');
-					
-					
 					var replyText = this.getMessage(det.comment);
-					
-					
-					$.post("http://www.weibo.com/aj/comment/add?_wv=5&__rnd="+new Date().getTime(),
-						{
-							act:'reply',
-							mid:det['mid'],
-							cid:det['cid'],
-							uid:det['status_owner_user'],
-							forward:0,
-							isroot:0,
-							content:'@'+det['content']+' '+replyText,
-							ouid:det['ouid'],
-							ispower:det['ispower'],
-							status_owner_user:det['status_owner_user'],
-							_t:0,
-							repeatNode:'javascript:;',
-							location:'commbox',
-						},function(data) {
-							
-							Weibo.Common.notification('新的评论',"“"+det['comment']+'”;已自动回复,内容:“'+'@'+det['content']+' '+replyText+'”','comment.png');
-							$("#pop_box_"+det.cid+" .status").html('回复成功');
-							window.setTimeout(function(){
-								$("#box_container .pop_box").hide()
-							},3000);
-						}
-					);
+					Weibo.Im.sendMessage(det['ouid'], replyText,function(data) {
+						Weibo.Common.notification('新的评论',"“"+det['comment']+'”;已自动回复,内容:“'+replyText+'”','comment.png');
+						$("#pop_box_"+det.cid+" .status").html('回复成功');
+						window.setTimeout(function(){
+							$("#box_container .pop_box").hide()
+						},3000);
+					}.bind(this));
 				}
 			} 
 		}.bind(this),'json')
@@ -514,7 +604,7 @@ Weibo.Assist.Message.prototype = {
 		var content =  this.comment.getMessage(content);
 		var t = new Date();
 		var time = t.getHours()+':'+t.getMinutes()+':'+t.getSeconds();
-		return content +' ('+ time+'发)';
+		return content;
 	}
 	,
 	autoReply:function(uid,message,content){
@@ -522,7 +612,7 @@ Weibo.Assist.Message.prototype = {
 		
 		
 		var layer = $('<div id="message_pop_'+uid+'"><div class="content"></div><div class="status"></div></div>');
-		$(document.body).append(layer);
+		$("#box_container").append(layer);
 		$("#message_pop_"+uid).css({
 			'padding':10,
 			'position':'fixed',
@@ -542,23 +632,11 @@ Weibo.Assist.Message.prototype = {
 		$.get('http://weibo.com/message/history?uid='+uid,{
 			't':new Date().getTime()
 		},function(data) {
-			$.post(
-				'http://weibo.com/aj/message/add?_wv=5&__rnd='+new Date().getTime(),
-				{
-					'text':message,
-					'uid':uid,
-					'fids':'',
-					'style_id':1,
-					'location':'msgdialog',
-					'module':'msgissue',
-					'_t':0,
-				},
-				function(){
-					Weibo.Common.notification('新的私信',"“"+content+'”;已自动回复,内容:“'+message+'”','message.png');
-					layer.find('.status').html('回复成功！');
-					window.setTimeout(function(){layer.remove();},4000);
-				}.bind(this)
-			);
+			Weibo.Im.sendMessage(uid,message,function(){
+				Weibo.Common.notification('新的私信',"“"+content+'”;已自动回复,内容:“'+message+'”','message.png');
+				layer.find('.status').html('回复成功！');
+				window.setTimeout(function(){layer.remove();},4000);
+			}.bind(this));
 		}.bind(this));
 	},
 	getMessage:function(){
@@ -648,7 +726,7 @@ Weibo.Assist.Notesboard.prototype = {
 		var content =  this.comment.getMessage(content);
 		var t = new Date();
 		var time = t.getHours()+':'+t.getMinutes()+':'+t.getSeconds();
-		return content +' ('+ time+'发)';
+		return content ;
 	},
 	reply:function(d) {
 		$.post(
@@ -664,8 +742,12 @@ Weibo.Assist.Notesboard.prototype = {
 			'module':'msglayout',
 			'_t':0
 			},function(data) {
-				Weibo.Common.notification('新未关注私信',"“"+d.content+'”;已自动回复,内容:“'+this.getReply(d.content)+'”','note.png');
-			}.bind(this)
+				if(data.code=='100000') {
+					Weibo.Common.notification('新未关注私信',"“"+d.content+'”;已自动回复,内容:“'+this.getReply(d.content)+'”','note.png');
+				} else {
+					Weibo.Common.notification('新未关注私信',"“"+d.content+'”;已自动回复,内容:“'+this.getReply(d.content)+'”'+'失败！'+data.msg,'note.png');
+				}
+			}.bind(this),'json'
 		);
 		
 	}
@@ -691,22 +773,4 @@ Weibo.Assist.Notesboard.prototype = {
 }
 
 
-function main() { 
-	var COMMENT = new Weibo.Assist.Comment();
-	COMMENT.init();
-	var message = new Weibo.Assist.Message();
-	message.setComment(COMMENT);
-	message.init();
-	
-	var notesboard = new Weibo.Assist.Notesboard();
-	notesboard.setComment(COMMENT);
-	notesboard.init();
-}
-main();
-	
-	
-	
-//uiu
-
-
-//window.setInterval(getData,2000);
+Weibo.Common.init();
