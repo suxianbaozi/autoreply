@@ -1,3 +1,7 @@
+/**
+ * 最牛逼的版本
+ * */
+
 var Weibo = {};
 Weibo.Assist = {};
 
