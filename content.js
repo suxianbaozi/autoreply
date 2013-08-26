@@ -312,9 +312,20 @@ Weibo.Assist.Comment.prototype = {
 		
 		this.toBody(keyBox);
 		
+		var keySortList = [];
+		
+		
 		for(var k in this.keyList) {
-			this.keyViewAdd(this.keyList[k].key,this.keyList[k].text,this.keyList[k].keyId);
+			keySortList[this.keyList[k].rank] = this.keyList[k];
 		}
+		
+		for(var i=0;i<keySortList.length;i++) {
+			this.keyViewAdd(keySortList[i].key,
+					keySortList[i].text,
+					keySortList[i].keyId);
+		}
+		
+		
 		$("#key_list_container").dragsort({ dragEnd:this.adjustSort.bind(this)});
 		
 	},
@@ -341,7 +352,7 @@ Weibo.Assist.Comment.prototype = {
 			'uid':this.userId
 		},function(data) {
 			for(var i=0;i<data.length;i++) {
-				this.keyDataAdd(data[i].key,data[i].text,data[i].id);
+				this.keyDataAdd(data[i].key,data[i].text,data[i].id,data[i].rank);
 			}
 		}.bind(this))
 	}
