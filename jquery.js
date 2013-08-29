@@ -15,4 +15,18 @@ Function.prototype.bind = function(obj) {
     }
 
 }
-
+Function.prototype.extend = function(parent) {
+	var _this = this;
+	var child =  function(){
+		this.parent = parent;
+		this.parent();
+		this.me = _this;
+		this.me();
+		delete this.parent;
+		delete this.me;
+	}
+	for(var k in parent.prototype) {
+		child.prototype[k] = parent.prototype[k]
+	}
+	return child;
+}
