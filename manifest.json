@@ -10,7 +10,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://*.weibo.com/u*wvr*"],
+      "matches": ["http://*.weibo.com/*wvr*"],
       "js": ["jquery.js","jquery.dragsort.js","content.js"]
     }
   ],

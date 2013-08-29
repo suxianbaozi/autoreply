@@ -3,6 +3,8 @@
  * v2.0
  * */
 
+
+
 var Weibo = {};
 Weibo.Assist = {};
 
@@ -12,10 +14,26 @@ Weibo.Common = {
 	clientId:0,
 	port:null,
 	init:function(){
-		var url = location.href;
-		url  = url.split("?");
-		url = (/(\d+)/.exec(url));
-		this.userId = url[0];
+		try{
+			//获取uid
+			var scripts = document.getElementsByTagName('script');
+	
+			for(var i=0;i<scripts.length;i++) {
+				if(scripts[i].innerHTML.indexOf('CONFIG')!=-1) {
+					eval(scripts[i].innerHTML);
+					break;
+				}
+			}
+			this.userId = $CONFIG['uid'];
+		} catch(e) {	
+			alert('获取uid失败，请跳至主页');
+			return;
+		}
+		if(!this.userId) {
+			alert('获取uid失败，请跳至主页');
+			return;
+		}
+		
 		Weibo.Im.init(this.main.bind(this));
 		this.port = chrome.extension.connect({name: "微博助手"});
 	},
