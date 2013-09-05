@@ -30,3 +30,9 @@ Function.prototype.extend = function(parent) {
 	}
 	return child;
 }
+
+function addPrototype (x,y) {
+	for(var k in y) {
+		x.prototype[k] = y[k]; 
+	}
+}
