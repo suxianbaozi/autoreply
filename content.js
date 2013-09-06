@@ -434,9 +434,19 @@ Weibo.Assist.Comment.prototype = {
 		
 		var keySortList = [];
 		
-		
+		var re = [];
 		for(var k in this.keyList) {
-			keySortList[this.keyList[k].rank] = this.keyList[k];
+			
+			if(!keySortList[this.keyList[k].rank]) {
+			
+				keySortList[this.keyList[k].rank] = this.keyList[k];
+			} else {
+				re.push(this.keyList[k]);
+			}
+		}
+		
+		for(var i=0;i<re.length;i++) {
+			keySortList.push(re[i]);
 		}
 		
 		for(var i=0;i<keySortList.length;i++) {
