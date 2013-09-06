@@ -412,13 +412,13 @@ Weibo.Assist.Comment.prototype = {
 		keyBox.css({
 			'position':'fixed',
 			'top':100,
-			'width':170,
+			'width':180,
 			'height':'auto',
 			'zIndex':99
 		})
 		
 		
-		$('<ul id="key_list_container" style="padding:5px;padding-bottom:10px;"></ul>').appendTo(keyBox);
+		$('<ul id="key_list_container" style="padding:5px;padding-bottom:10px;  height:300px;overflow:auto;"></ul>').appendTo(keyBox);
 		
 		
 		keyBox.animate({
