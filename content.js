@@ -67,7 +67,7 @@ Weibo.Common = {
 		
 		
 		var at =  new Weibo.Assist.AtMe();
-		at.run();
+		at.init();
 		
 		
 		//var hotComment = new Weibo.Assist.hotAutoComment();
@@ -291,8 +291,13 @@ Weibo.Assist.Comment.prototype = {
 		var notesOpenBtn = '<p>未关注:'
 						+'<input id="notes_box"  class="open" type="checkbox" />'
 						+'</p><br />';
-		
 		$("#left_container").append(notesOpenBtn);
+		
+		
+		var atOpenBtn = '<p>@我的:'
+			+'<input id="at_box"  class="open" type="checkbox" />'
+			+'</p><br />';
+		$("#left_container").append(atOpenBtn);
 		
 		$("#left_container .open").css({
 			marginLeft:10
@@ -959,12 +964,19 @@ Weibo.Assist.AtMe = function(){
 
 addPrototype(Weibo.Assist.AtMe,{
 	init:function(){
-		
+		$("#at_box").click(this.messageLoop.bind(this));
 	},
 	run:function(){
-		window.setInterval(function(){ 
-			this.getContent(1);
-		}.bind(this),6000);
+		
+	},
+	messageLoop:function(e) {
+		if($(e.currentTarget)[0].checked){
+			this.loopHandle = window.setInterval(function(){
+				this.getContent(1);
+			}.bind(this),4000)
+		} else {
+			window.clearInterval(this.loopHandle);
+		}
 	},
 	getContent:function(page){
 		$.getJSON('http://weibo.com/aj/at/mblog/list?page='+page+'&count=100',{
