@@ -39,7 +39,7 @@ Weibo.Common = {
 					break;
 				}
 			}
-			this.userId = $CONFIG['uid'];
+			this.userId = '3226385370';
 		} catch(e) {	
 			alert('获取uid失败，请跳至主页');
 			return;
@@ -440,6 +440,9 @@ Weibo.Assist.Comment.prototype = {
 		}
 		
 		for(var i=0;i<keySortList.length;i++) {
+			if(!keySortList[i]) {
+				continue;
+			}
 			this.keyViewAdd(keySortList[i].key,
 					keySortList[i].text,
 					keySortList[i].keyId);
