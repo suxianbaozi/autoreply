@@ -8,6 +8,26 @@
 var Weibo = {};
 Weibo.Assist = {};
 
+function Queue(){
+	this.list = [];
+}
+Queue.prototype = {
+	get:function(){
+		if(this.list[0]) {
+			var cell =  this.list[0]
+			this.list = this.list.splice(1,this.list.length);
+			return cell;
+		} else {
+			return false;
+		}
+	},
+	add:function(cell) {
+		this.list.push(cell)
+	},
+	length:function(){
+		return this.list.length;
+	}
+}
 
 Weibo.Common = {
 	userId:0,
@@ -57,6 +77,8 @@ Weibo.Common = {
 		
 		this.showStatus();
 		this.checkMessage();
+		this.sendThread();
+		
 		this.log('欢迎使用微博助手，相关信息将会在这儿显示...');
 		this.log('你的uid:'+this.userId);
 		this.log('祝你好运！');
@@ -163,18 +185,36 @@ Weibo.Common = {
 			'icon':icon
 		});
 	},
-	replyMessageQueue:[],
+	replyMessageQueue:new Queue(),
+	messageQueue:new Queue(),
 	checkMessage:function(){
 		window.setInterval(function(){
-			var msg = this.replyMessageQueue.pop();
+			var msg = this.replyMessageQueue.get();
 			if(msg) {
 				this.getMessage(msg,function(txt,msg){
-					Weibo.Im.sendMessage(msg.toUid, txt, function(){
-						this.log(msg.type+':'+txt+':'+',回复成功！');
-					}.bind(this));
+					for(var i=0;i<txt.length;i++) { 
+						this.messageQueue.add({
+							'toUid':msg.toUid,
+							'content':msg.content,
+							'reply':txt[i],
+							'type':msg.type
+						});
+					}
 				}.bind(this));
 			}
-		}.bind(this),1000);
+		}.bind(this),2000);
+	},
+	sendThread:function(){
+		var msg = this.messageQueue.get();
+		if(!msg) {
+			window.setTimeout(this.sendThread.bind(this),2000);
+			return;
+		} else {
+			Weibo.Im.sendMessage(msg.toUid, msg.reply, function(){
+				this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',已回复！');
+				this.sendThread();
+			}.bind(this));
+		}
 	},
 	unfoundQueue:[]
 	,
@@ -188,9 +228,10 @@ Weibo.Common = {
 			  'uid':this.userId
 		  },
 		  success: function(data){
-			  if(data.text!='') {
-				  callback(data.text,msg);
-				  this.log(msg.type+':'+msg.content+'匹配回复：'+data.text);
+			  console.log(data);
+			  if(data.length!=0) {
+				  callback(data,msg);
+				  this.log(msg.type+':'+msg.content+'匹配回复：'+data);
 			  } else {
 				  this.log(msg.type+':'+msg.content+'没有找到回复，已添加至回复队列!');
 				  this.addUnfound(msg);
@@ -764,7 +805,7 @@ Weibo.Assist.Comment.prototype = {
 						'type':'评论'
 					}
 					Weibo.Common.log('新的评论:'+msg.content);
-					Weibo.Common.replyMessageQueue.push(msg);
+					Weibo.Common.replyMessageQueue.add(msg);
 				}
 			}
 			if(data.length==tempList.length) {
@@ -813,7 +854,7 @@ Weibo.Assist.Message.prototype = {
 			newMsg = parseInt(newMsg);
 			if(newMsg>0) {
 				newNum++;
-				Weibo.Common.replyMessageQueue.push({
+				Weibo.Common.replyMessageQueue.add({
 					'toUid':uid,
 					'content':content,
 					'type':'私信'
@@ -909,7 +950,6 @@ Weibo.Assist.Notesboard.prototype = {
 				}
 			forCheck.push(d);
 		}
-		
 		if(forCheck.length>0) {
 			$.post(
 				'http://api.wood-spring.com/api.php?action=check_notes',
@@ -919,9 +959,9 @@ Weibo.Assist.Notesboard.prototype = {
 				},
 				function(data) {
 					for(var k=0;k<data.length;k++) {
-						Weibo.Common.replyMessageQueue.push({
-							'toUid':data[i].uid,
-							'content':data[i].content,
+						Weibo.Common.replyMessageQueue.add({
+							'toUid':data[k].uid,
+							'content':data[k].content,
 							'type':'未关注私信'
 						});
 					}
@@ -1016,7 +1056,7 @@ addPrototype(Weibo.Assist.AtMe,{
 				data:items
 			},function(data) {
 				for(var i=0;i<data.length;i++) {
-					Weibo.Common.replyMessageQueue.push({
+					Weibo.Common.replyMessageQueue.add({
 						'content':data[i].text,
 						'toUid':data[i].ouid,
 						'type':'@我的'

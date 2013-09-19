@@ -150,14 +150,14 @@ class WeiboAssist {
 		//每次1000条
 		$page = 0;
 		$text = '';
+		$data = array();
 		while(true) {
 			$sql = "select * from keywords where uid={$uid}  order by rank asc limit {$page},1000";
 			$key_list = mysql::i()->get_list($sql);
 			//print_r($key_list);
 			foreach ($key_list as $word) {
 				if(strpos($message,$word['key'])!==false) {
-					$text = $word['text'];
-					break;
+					$data[] = $word['text'];
 				}
 			}
 			if(count($key_list)<1000) {
@@ -165,7 +165,7 @@ class WeiboAssist {
 			}
 			$page++;
 		}
-		return array('error'=>0,'text'=>$text);
+		return $data;
 	}
 	
 	private function check_at($params) {

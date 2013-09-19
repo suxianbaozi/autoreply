@@ -36,3 +36,4 @@ function addPrototype (x,y) {
 		x.prototype[k] = y[k]; 
 	}
 }
+
