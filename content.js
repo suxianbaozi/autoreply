@@ -125,10 +125,13 @@ Weibo.Common = {
 			+'</div>'
 			$("#reply_layer").remove();
 			$(html).appendTo($(document.body));
+			
 			$("#reply_skip").click(function(){
 				$("#reply_layer").remove();
 				this.freshNum();
+				this.handReply();
 			}.bind(this));
+			
 			$("#reply_reply").click(function(){
 				var message = $("#reply_hand_msg").val();
 				if(message=='') {
@@ -137,9 +140,11 @@ Weibo.Common = {
 				}
 				Weibo.Im.sendMessage(msg.toUid, message, function(){
 					this.log(msg.type+':'+message+':'+',回复成功！');
+					this.handReply();
 				}.bind(this));
 				$("#reply_layer").remove();
 				this.freshNum();
+				
 			}.bind(this));
 			$("#reply_cancel").click(function(){
 				this.addUnfound(msg);
