@@ -82,21 +82,50 @@ Weibo.Common = {
 		this.log('欢迎使用微博助手，相关信息将会在这儿显示...');
 		this.log('你的uid:'+this.userId);
 		this.log('祝你好运！');
+		
+		
+		$("#close_pad").click(function(e) {
+			
+			var me = $(e.currentTarget);
+			if(me.html()=='收起'){
+				
+				$("#status_pad").animate({
+					left:-479
+				});
+				me.html('展开');
+			} else {
+				$("#status_pad").animate({
+					left:0
+				});
+				me.html('收起');
+			}
+		});
 	},
 	showStatus:function(){
-		$('<div style="position:fixed;left:4px;bottom:-0px;'
+		$('<div style="position:fixed;left:-479px;bottom:0px;'
 				+'border:1px solid black;'
 				+'background-color:white;'
 				+'width:500px;height:200px;"'
 				+' id="status_pad"></div>').appendTo($(document.body));
-		$("<h3 id='pad_title' style='padding:5px;'>状态板</h3>").appendTo($("#status_pad"));
+		
+		$("#status_pad").animate({
+			left:0
+		});
+		
+		$('<div id="pad_container" style="width:475px;float:left;"></div>').appendTo($("#status_pad"));
+		
+		$("<div id='pad_title' style='padding:5px;width:15px;float:left;'>状态板<br /><br /><br /><br />"
+				+"<a id='close_pad'  href='javascript:;'>收起</a></div>").appendTo($("#status_pad"));
+		
 		$("#pad_title").css({
 			'backgroundColor':'black',
 			'color':'white',
 			'fontSize':'12px',
-			'padding':'2px;'
+			'padding':'2px;',
+			'height':200
 		});
-		$('<div id="pad_container"></div>').appendTo($("#status_pad"));
+		
+		
 		$('<div id="unfound_status" style="margin:20px;"><span id="unfound_num" '
 				+' style="color:red;font-weight:bold;"'
 				+' >0</span>条待手动回复&nbsp;&nbsp;'
@@ -170,7 +199,12 @@ Weibo.Common = {
 		var at =  new Weibo.Assist.AtMe();
 		at.init();
 		
+		var like = new Weibo.Assist.Like();
+		like.setComment(COMMENT);
+		like.init();
 		
+		this.black = new Weibo.Assist.blackWords();
+		this.black.init();
 		//var hotComment = new Weibo.Assist.hotAutoComment();
 		//this.addApp(hotComment);
 	},
@@ -395,9 +429,12 @@ Weibo.Assist.Comment.prototype = {
 		$("#left_container").append(keywordBtn);
 		
 		
-		//var defaultKeywordBtn = $('<p><input id="my_default_keywords" style="width:80px; height:30px;" class="W_btn_b" type="button" value="默认关键词" /></p>')
-		//$("#left_container").append(defaultKeywordBtn);
+		var defaultKeywordBtn = $('<p><input id="my_default_keywords" style="width:80px; height:30px;" class="W_btn_b" type="button" value="赞回复内容" /></p>')
+		$("#left_container").append(defaultKeywordBtn);
 		
+		$('<p><input id="black_words" style="width:80px; '
+				+'height:30px;" class="W_btn_b" type="button" value="黑名单" /></p>').appendTo($("#left_container"));
+				
 		
 		$("#left_container p").css(
 		{
@@ -412,6 +449,7 @@ Weibo.Assist.Comment.prototype = {
 			return;
 		});
 		$("#my_default_keywords").click(this.showDefaultKey.bind(this));
+		
 		
 		
 		
@@ -443,25 +481,25 @@ Weibo.Assist.Comment.prototype = {
 			+'</p><br />';
 		$("#left_container").append(atOpenBtn);
 		
+		
+		var likeOpenBtn = '<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;赞:'
+			+'<input id="like_box"  class="open" type="checkbox" />'
+			+'</p><br />';
+		$("#left_container").append(likeOpenBtn);
+		
+		
 		$("#left_container .open").css({
 			marginLeft:10
 		});
 		$("#comment_box").click(this.commentLoop.bind(this));
-		$("#comment_box").click(this.messageLoop.bind(this));
-		$("#comment_box").click(this.notesLoop.bind(this));
+		
+		
 		
 		
 		this.loadKeyList();
 		this.loadDefault();
 		//this.timeHandle = window.setInterval(this.getComment.bind(this),4000)
 	},
-	messageLoop:function(e){
-		
-	},
-	notesLoop:function(e){
-		
-	}
-	,
 	commentLoop:function(e){
 		if($(e.currentTarget)[0].checked){
 			this.timeHandle = window.setInterval(this.getComment.bind(this),4000)
@@ -487,7 +525,7 @@ Weibo.Assist.Comment.prototype = {
 	showDefaultKey:function(e) {
 		
 		var html =  '<div id="default_key_pop" style="padding:10px;" class="gn_topmenulist">';
-		html += '<div style="margin-top:10px;">默认回复:<br /><br />';
+		html += '<div style="margin-top:10px;">赞回复:<br /><br />';
 		html += '<textarea id="defaultText" class="W_input" style="height:50px;width:220px;"></textarea>'
 		html += '</div>';
 		html += '<div style="margin-top:10px;text-align:right;">';
@@ -790,6 +828,16 @@ Weibo.Assist.Comment.prototype = {
 		var tempList = [];
 		for(var i =0;i<replyDetails.length;i++) {
 			var det = replyDetails[i];
+			console.log(det);
+			if(Weibo.Common.black.checkBlack(det.comment)){
+				$.post('http://weibo.com/aj/comment/del?_wv=5&__rnd='+new Date().getTime(),{
+					is_block:0,
+					cid:det.cid,
+					_t:0
+				})
+				continue;
+			}
+			
 			if(!this.hasReply[det.cid]) {
 				this.hasReply[det.cid] = 1;
 				tempList.push(det);
@@ -813,7 +861,7 @@ Weibo.Assist.Comment.prototype = {
 					Weibo.Common.replyMessageQueue.add(msg);
 				}
 			}
-			if(data.length==tempList.length) {
+			if(tempList.length && (data.length==tempList.length)) {
 				this.page++;
 				this.getComment(this.page);
 			} else {
@@ -873,7 +921,7 @@ Weibo.Assist.Message.prototype = {
 				});
 			}
 		}
-		if(newNum==msgListDom.length) {//这一页全是新的，那就继续第二页
+		if(msgListDom.length && (newNum==msgListDom.length)) {//这一页全是新的，那就继续第二页
 			Weibo.Common.log('私信第一页全是新的，自动去第二页!');
 			this.page++;
 			this.getMessage(this.page);
@@ -970,7 +1018,7 @@ Weibo.Assist.Notesboard.prototype = {
 							'type':'未关注私信'
 						});
 					}
-					if(data.length==forCheck.length) { //全部是新的，自动下一页
+					if(forCheck.lengt && (data.length==forCheck.length)) { //全部是新的，自动下一页
 						this.page++;
 						Weibo.Common.log('未关注全是新的，自动进入下一页');
 						this.getNotes(this.page);
@@ -1067,8 +1115,8 @@ addPrototype(Weibo.Assist.AtMe,{
 						'type':'@我的'
 					});
 				}
-				if(data.length==items.length) {//两个相等，说明全部返回，那么取第二页
-					this.getContent(page+1);
+				if(items.length && (data.length==items.length)) {//两个相等，说明全部返回，那么取第二页
+					this.getContent(++page);
 				}
 			}.bind(this),'json');
 		}.bind(this))
@@ -1076,5 +1124,137 @@ addPrototype(Weibo.Assist.AtMe,{
 })
 
 
+Weibo.Assist.Like = function(){
+	this.name = '赞我的';
+}
+
+Weibo.Assist.Like.prototype = {
+	init:function(){
+		$("#like_box").click(this.messageLoop.bind(this));
+	},
+	messageLoop:function(e) {
+		if($(e.currentTarget)[0].checked){
+			this.loopHandle = window.setInterval(function(){
+				this.getLikeList(1);
+			}.bind(this),4000)
+		} else {
+			window.clearInterval(this.loopHandle);
+		}
+	},
+	setComment:function(c){
+		this.comment = c;
+	},
+	getLikeList:function(page){
+		page = page || 1;
+		$.get('http://weibo.com/like/inbox?leftnav=1&wvr=5&page='+page,{
+			
+		},
+		function(data){
+			data = data.split("<script>");
+			var STK = {};
+			STK.pageletM = {};
+			STK.pageletM.view = function(content){
+				var html = content.html;
+				var dataList = [];
+				$(html).find('.WB_feed_type').each(function(index,item) {
+					var mid = $(item).attr('mid');
+					//获取uid
+					var uInfo = $(item).find('.face img').attr('usercard');
+					uInfo = Weibo.Common.parseQuery(uInfo);
+					var uid = uInfo['id'];
+					var cell = {
+						'mid':mid,
+						'uid':uid
+					}
+					dataList.push(cell);
+				});
+				
+				$.post('http://api.wood-spring.com/api.php?action=check_like',{
+					'data':dataList,
+					'uid':Weibo.Common.userId
+				},function(data){
+					for(var i=0;i<data.length;i++) {
+						if(!data[i].replied) {
+							Weibo.Common.messageQueue.add({
+								'toUid':data[i].uid,
+								'content':'赞',
+								'reply':this.comment.defaultKey,
+								'type':'赞'
+							});
+						}
+					}
+					if(dataList.length && (data.length==dataList.length)) {
+						this.getLikeList(++page);
+					}
+				}.bind(this),'json');
+			}.bind(this)
+			for(var i=0;i<data.length;i++) {
+				if(data[i].indexOf('"pid":"pl_content_likeList"')!='-1'){
+					eval(data[i].split('</script>')[0]);
+				}
+			}
+		}.bind(this),'text');
+	}
+}
+
+Weibo.Assist.blackWords = function(){
+	this.blackWords = '';
+}
+Weibo.Assist.blackWords.prototype = {
+	
+	init:function(){
+		$("#black_words").toggle(function(e){
+			$('<div id="black_words_edit"></div>').appendTo($(document.body));
+			$("#black_words_edit").css({
+				'position':'fixed',
+				'border':'1px solid black',
+				'width':400,
+				'height':'auto',
+				'left':200,
+				'top':100,
+				'backgroundColor':'white',
+				'padding':5
+			});
+			$('<p style="padding:10px 10 10px 0;color:red;font-weight:bold;">逗号(,)隔开，注意是英文逗号！</p>').appendTo($("#black_words_edit"))
+			$('<textarea style="width:380px;height:150px;margin:10px;" id="black_words_text"></textarea>').appendTo($("#black_words_edit"));
+			$('<p style="text-align:right;"><input id="black_words_save" style="width:40px;height:20px;" type="button" value="确定" class="W_btn_b" /></p>').appendTo($("#black_words_edit"));
+			
+			$("#black_words_save").unbind('click');
+			$("#black_words_save").click(function(e){
+				this.blackWords = $("#black_words_text").val();
+				$("#black_words").click();
+				
+				
+				$.post('http://api.wood-spring.com/api.php?action=save_black',{
+					uid:Weibo.Common.userId,
+					content:this.blackWords
+				},function(data) {
+					
+				});
+			}.bind(this));
+			console.log(this);
+			$("#black_words_text").val(this.blackWords);
+			
+		}.bind(this),function(e){
+			$("#black_words_edit").remove();
+		}.bind(this));
+		
+		$.getJSON('http://api.wood-spring.com/api.php?action=get_black',{
+			uid:Weibo.Common.userId
+		},function(data) {
+			this.blackWords = data.text;
+		}.bind(this));
+		
+	},
+	checkBlack:function(message){
+		var wordsList = this.blackWords.split(',');
+		for(var i=0;i<wordsList.length;i++) {
+			if(message.indexOf(wordsList[i])!='-1') {
+				return true;
+			}
+		}
+		return false;
+	}
+}
 
 Weibo.Common.init();

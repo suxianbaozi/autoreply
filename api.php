@@ -1,4 +1,5 @@
 <?php
+
 class mysql {
 
 	public static $me = null;
@@ -195,6 +196,45 @@ class WeiboAssist {
 			return $result;
 		}
 		
+	}
+	private function check_like($params) {
+		$uid = $params['uid'];
+		$data_list = $params['data'];
+		$result = array();
+		foreach($data_list as $cell) {
+			$sql = "select * from likes where uid={$uid} and mid={$cell['mid']}";
+			if(!$row = mysql::i()->get_one($sql)) {
+				//是否已经回复？
+				$sql = "select id from likes where touid={$cell['uid']}";
+				if(mysql::i()->get_one($sql)) {
+					$cell['replied'] = 1;
+				}
+				$result[] = $cell;
+				//写入
+				$sql = "insert into likes(uid,mid,touid)"
+				." values('{$uid}','{$cell['mid']}','{$cell['uid']}')";
+				mysql::i()->exe_sql($sql);
+			}
+		}
+		return $result;
+	}
+	private function save_black($params) {
+		$uid = $params['uid'];
+		$content = $params['content'];
+		$sql = "select * from black_words where uid={$uid}";
+		if($row = mysql::i()->get_one($sql)) {
+			$sql = "update black_words set content='{$content}' where id={$row['id']}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into black_words(uid,content) values('{$uid}','{$content}')";
+			mysql::i()->exe_sql($sql);
+		}
+	}
+	private function get_black($params) {
+		$uid = $params['uid'];
+		$sql = "select * from black_words where uid={$uid}";
+		$row = mysql::i()->get_one($sql);
+		return array('text'=>$row['content'].'');
 	}
 }
 
