@@ -246,7 +246,7 @@ Weibo.Common = {
 	sendThread:function(){
 		var msg = this.messageQueue.get();
 		if(!msg) {
-			window.setTimeout(this.sendThread.bind(this),10000);
+			window.setTimeout(this.sendThread.bind(this),2000);
 			return;
 		} else {
 			Weibo.Im.sendMessage(msg.toUid, msg.reply, function(){
