@@ -828,7 +828,6 @@ Weibo.Assist.Comment.prototype = {
 		var tempList = [];
 		for(var i =0;i<replyDetails.length;i++) {
 			var det = replyDetails[i];
-			console.log(det);
 			if(Weibo.Common.black.checkBlack(det.comment)){
 				$.post('http://weibo.com/aj/comment/del?_wv=5&__rnd='+new Date().getTime(),{
 					is_block:0,
@@ -837,7 +836,6 @@ Weibo.Assist.Comment.prototype = {
 				})
 				continue;
 			}
-			
 			if(!this.hasReply[det.cid]) {
 				this.hasReply[det.cid] = 1;
 				tempList.push(det);
@@ -1247,10 +1245,12 @@ Weibo.Assist.blackWords.prototype = {
 		
 	},
 	checkBlack:function(message){
-		var wordsList = this.blackWords.split(',');
-		for(var i=0;i<wordsList.length;i++) {
-			if(message.indexOf(wordsList[i])!='-1') {
-				return true;
+		if(this.blackWords) {
+			var wordsList = this.blackWords.split(',');
+			for(var i=0;i<wordsList.length;i++) {
+				if(wordsList[i] && message.indexOf(wordsList[i])!='-1') {
+					return true;
+				}
 			}
 		}
 		return false;
