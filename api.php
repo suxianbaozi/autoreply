@@ -230,9 +230,29 @@ class WeiboAssist {
 			mysql::i()->exe_sql($sql);
 		}
 	}
+	
+	private function save_white($params) {
+		$uid = $params['uid'];
+		$content = $params['content'];
+		$sql = "select * from white_ids where uid={$uid}";
+		if($row = mysql::i()->get_one($sql)) {
+			$sql = "update white_ids set content='{$content}' where id={$row['id']}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into white_ids(uid,content) values('{$uid}','{$content}')";
+			mysql::i()->exe_sql($sql);
+		}
+	}
+	
 	private function get_black($params) {
 		$uid = $params['uid'];
 		$sql = "select * from black_words where uid={$uid}";
+		$row = mysql::i()->get_one($sql);
+		return array('text'=>$row['content'].'');
+	}
+	private function get_white($params) {
+		$uid = $params['uid'];
+		$sql = "select * from white_ids where uid={$uid}";
 		$row = mysql::i()->get_one($sql);
 		return array('text'=>$row['content'].'');
 	}

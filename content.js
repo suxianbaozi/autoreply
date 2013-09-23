@@ -205,6 +205,11 @@ Weibo.Common = {
 		
 		this.black = new Weibo.Assist.blackWords();
 		this.black.init();
+		
+		
+		this.white = new Weibo.Assist.whiteIds();
+		this.white.init();
+		
 		//var hotComment = new Weibo.Assist.hotAutoComment();
 		//this.addApp(hotComment);
 	},
@@ -435,6 +440,10 @@ Weibo.Assist.Comment.prototype = {
 		$('<p><input id="black_words" style="width:80px; '
 				+'height:30px;" class="W_btn_b" type="button" value="黑名单" /></p>').appendTo($("#left_container"));
 				
+		
+		$('<p><input id="white_ids" style="width:80px; '
+				+'height:30px;" class="W_btn_b" type="button" value="白名单" /></p>').appendTo($("#left_container"));
+		
 		
 		$("#left_container p").css(
 		{
@@ -828,7 +837,8 @@ Weibo.Assist.Comment.prototype = {
 		var tempList = [];
 		for(var i =0;i<replyDetails.length;i++) {
 			var det = replyDetails[i];
-			if(Weibo.Common.black.checkBlack(det.comment)){
+			if(Weibo.Common.black.checkBlack(det.comment) && (!Weibo.Common.white.checkWhite(det.ouid))){
+				Weibo.Common.log('<span style="color:red;">删除评论:'+det.comment+'</span>');
 				$.post('http://weibo.com/aj/comment/del?_wv=5&__rnd='+new Date().getTime(),{
 					is_block:0,
 					cid:det.cid,
@@ -1249,6 +1259,63 @@ Weibo.Assist.blackWords.prototype = {
 			var wordsList = this.blackWords.split(',');
 			for(var i=0;i<wordsList.length;i++) {
 				if(wordsList[i] && message.indexOf(wordsList[i])!='-1') {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+}
+
+Weibo.Assist.whiteIds = function(){
+	
+}
+Weibo.Assist.whiteIds.prototype = {
+	init:function(){
+		$("#white_ids").toggle(function(e){
+			$('<div id="white_ids_edit"></div>').appendTo($(document.body));
+			$("#white_ids_edit").css({
+				'position':'fixed',
+				'border':'1px solid black',
+				'width':400,
+				'height':'auto',
+				'left':200,
+				'top':100,
+				'backgroundColor':'white',
+				'padding':5
+			});
+			$('<p style="padding:10px 10 10px 0;color:red;font-weight:bold;">小号id 逗号(,)隔开，注意是英文逗号！</p>').appendTo($("#white_ids_edit"))
+			$('<textarea style="width:380px;height:150px;margin:10px;" id="white_ids_text"></textarea>').appendTo($("#white_ids_edit"));
+			$('<p style="text-align:right;"><input id="white_ids_save" style="width:40px;height:20px;" type="button" value="确定" class="W_btn_b" /></p>').appendTo($("#white_ids_edit"));
+			
+			$("#white_ids_save").unbind('click');
+			$("#white_ids_save").click(function(e){
+				this.whiteIds = $("#white_ids_text").val();
+				$("#white_ids").click();
+				$.post('http://api.wood-spring.com/api.php?action=save_white',{
+					uid:Weibo.Common.userId,
+					content:this.whiteIds
+				},function(data) {
+					
+				});
+			}.bind(this));
+			$("#white_ids_text").val(this.whiteIds);
+		}.bind(this),function(e) {
+			$("#white_ids_edit").remove();
+		}.bind(this));
+		
+		$.getJSON('http://api.wood-spring.com/api.php?action=get_white',{
+			uid:Weibo.Common.userId
+		},function(data) {
+			this.whiteIds = data.text;
+		}.bind(this));
+		
+	},
+	checkWhite:function(uid){
+		if(this.whiteIds) {
+			var wordsList = this.whiteIds.split(',');
+			for(var i=0;i<wordsList.length;i++) {
+				if(wordsList[i] && uid==wordsList[i]) {
 					return true;
 				}
 			}
