@@ -33,6 +33,7 @@ Weibo.Common = {
 	userId:0,
 	clientId:0,
 	port:null,
+	messageAssoc:{},
 	parseQuery:function(query) {
 		var result = {};
 		var qs = query.split('&');
@@ -912,21 +913,23 @@ Weibo.Assist.Message.prototype = {
 			var uid = $(msgListDom[i]).attr('uid');
 			var content = $(msgListDom[i]).find(".msg_detail").html();
 			var newMsg =   $(msgListDom[i]).find(".W_new_count").html();
+			
 			newMsg = parseInt(newMsg);
 			if(newMsg>0) {
 				newNum++;
-				Weibo.Common.replyMessageQueue.add({
-					'toUid':uid,
-					'content':content,
-					'type':'私信'
-				});
-				//已读
-				
-				$.post('http://www.weibo.com/aj/message/clearunread?_wv=5',{
-					uids:uid
-				},function(data){
-					
-				});
+				(function(uid,content){
+					//已读
+					$.post('http://weibo.com/aj/message/clearunread?_wv=5',{
+						uids:uid
+					},function(data){
+						Weibo.Common.log('标记已读');
+						Weibo.Common.replyMessageQueue.add({
+							'toUid':uid,
+							'content':content,
+							'type':'私信'
+						});
+					},'text');
+				})(uid,content);
 			}
 		}
 		if(msgListDom.length && (newNum==msgListDom.length)) {//这一页全是新的，那就继续第二页
