@@ -244,6 +244,26 @@ class WeiboAssist {
 		}
 	}
 	
+	
+	private function save_fans($params) {
+		$uid = $params['uid'];
+		$content = $params['content'];
+		$sql = "select * from listen_fans where uid={$uid}";
+		if($row = mysql::i()->get_one($sql)) {
+			$sql = "update listen_fans set content='{$content}' where id={$row['id']}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into listen_fans(uid,content) values('{$uid}','{$content}')";
+			mysql::i()->exe_sql($sql);
+		}
+	}
+	private function get_fans($params) {
+		$uid = $params['uid'];
+		$sql = "select * from listen_fans where uid={$uid}";
+		$row = mysql::i()->get_one($sql);
+		return array('text'=>$row['content'].'');
+	}
+	
 	private function get_black($params) {
 		$uid = $params['uid'];
 		$sql = "select * from black_words where uid={$uid}";
@@ -255,6 +275,23 @@ class WeiboAssist {
 		$sql = "select * from white_ids where uid={$uid}";
 		$row = mysql::i()->get_one($sql);
 		return array('text'=>$row['content'].'');
+	}
+	private function check_message($params) {
+		$uid = $params['uid'];
+		
+		$m_list = $params['forReply'];
+		$re_list = array();
+		foreach($m_list as $m){
+			$key = md5($m['uid'].$m['time']);
+			$sql = "select * from message where uid='{$uid}' and "
+			."key='{$key}'";
+			if(!mysql::i()->get_one($sql)) {
+				$re_list[] = $m;
+				$sql = "insert message(uid,`key`) values('{$uid}','{$key}')";
+				mysql::i()->exe_sql($sql);
+			} 
+		}
+		return $re_list;
 	}
 }
 

@@ -82,7 +82,7 @@ Weibo.Common = {
 		
 		this.log('欢迎使用微博助手，相关信息将会在这儿显示...');
 		this.log('你的uid:'+this.userId);
-		this.log('祝你好运！');
+		this.log('Good luck！');
 		
 		
 		$("#close_pad").click(function(e) {
@@ -211,6 +211,8 @@ Weibo.Common = {
 		this.white = new Weibo.Assist.whiteIds();
 		this.white.init();
 		
+		this.fans = new Weibo.Assist.listenFans();
+		this.fans.init();
 		//var hotComment = new Weibo.Assist.hotAutoComment();
 		//this.addApp(hotComment);
 	},
@@ -445,6 +447,9 @@ Weibo.Assist.Comment.prototype = {
 		$('<p><input id="white_ids" style="width:80px; '
 				+'height:30px;" class="W_btn_b" type="button" value="白名单" /></p>').appendTo($("#left_container"));
 		
+		$('<p><input id="listen_fans" style="width:80px; '
+				+'height:30px;" class="W_btn_b" type="button" value="微博监听" /></p>').appendTo($("#left_container"));
+		
 		
 		$("#left_container p").css(
 		{
@@ -512,7 +517,7 @@ Weibo.Assist.Comment.prototype = {
 	},
 	commentLoop:function(e){
 		if($(e.currentTarget)[0].checked){
-			this.timeHandle = window.setInterval(this.getComment.bind(this),4000)
+			this.timeHandle = window.setInterval(this.getComment.bind(this),10000)
 		} else {
 			window.clearInterval(this.timeHandle);
 		}
@@ -894,7 +899,7 @@ Weibo.Assist.Message.prototype = {
 	},
 	messageLoop:function(e) {
 		if($(e.currentTarget)[0].checked){
-			this.loopHandle = window.setInterval(this.getMessage.bind(this),4000)
+			this.loopHandle = window.setInterval(this.getMessage.bind(this),10000)
 		} else {
 			window.clearInterval(this.loopHandle);
 		}
@@ -909,29 +914,49 @@ Weibo.Assist.Message.prototype = {
 		var dom=  $(msgList);
 		var msgListDom = dom.find(".WB_msg_type")
 		var newNum = 0;
+		
+		var forReply = [];
 		for(var i=0;i<msgListDom.length;i++) {
 			var uid = $(msgListDom[i]).attr('uid');
 			var content = $(msgListDom[i]).find(".msg_detail").html();
 			var newMsg =   $(msgListDom[i]).find(".W_new_count").html();
-			
+			var time = $(msgListDom[i]).find(".msg_ctrls .S_txt2").html();
 			newMsg = parseInt(newMsg);
 			if(newMsg>0) {
 				newNum++;
-				(function(uid,content){
-					//已读
-					$.post('http://weibo.com/aj/message/clearunread?_wv=5',{
-						uids:uid
-					},function(data){
-						Weibo.Common.log('标记已读');
-						Weibo.Common.replyMessageQueue.add({
-							'toUid':uid,
-							'content':content,
-							'type':'私信'
-						});
-					},'text');
-				})(uid,content);
+				if(content.indexOf('msg_ico_reply')==-1) {
+					forReply.push({'uid':uid,'content':content,'time':time});
+				} else {
+					Weibo.Common.log('fuck fuck!');
+				}
 			}
 		}
+		
+		if(forReply.length>0) {
+			$.post('http://api.wood-spring.com/api.php?action=check_message',{
+				'forReply':forReply,
+				'uid':Weibo.Common.userId
+			},function(rList){
+				for(var i=0;i<rList.length;i++) { 
+					var cell = rList[i];
+					(function(cell){
+						$.get('http://www.weibo.com/message/history',{
+							'uid':cell['uid'],
+							't':new Date().getTime()
+						},function(data){
+							Weibo.Common.log('标记已读');
+							Weibo.Common.replyMessageQueue.add({
+								'toUid':cell['uid'],
+								'content':cell['content'],
+								'type':'私信'
+							});
+						},'text');
+					})(cell)
+				}
+			},'json');
+		}
+		
+		
 		if(msgListDom.length && (newNum==msgListDom.length)) {//这一页全是新的，那就继续第二页
 			Weibo.Common.log('私信第一页全是新的，自动去第二页!');
 			this.page++;
@@ -978,7 +1003,7 @@ Weibo.Assist.Notesboard.prototype = {
 	},
 	messageLoop:function(e) {
 		if($(e.currentTarget)[0].checked){
-			this.loopHandle = window.setInterval(this.getNotes.bind(this),4000)
+			this.loopHandle = window.setInterval(this.getNotes.bind(this),10000)
 		} else {
 			window.clearInterval(this.loopHandle);
 		}
@@ -1089,7 +1114,7 @@ addPrototype(Weibo.Assist.AtMe,{
 		if($(e.currentTarget)[0].checked){
 			this.loopHandle = window.setInterval(function(){
 				this.getContent(1);
-			}.bind(this),4000)
+			}.bind(this),10000)
 		} else {
 			window.clearInterval(this.loopHandle);
 		}
@@ -1147,7 +1172,7 @@ Weibo.Assist.Like.prototype = {
 		if($(e.currentTarget)[0].checked){
 			this.loopHandle = window.setInterval(function(){
 				this.getLikeList(1);
-			}.bind(this),4000)
+			}.bind(this),10000)
 		} else {
 			window.clearInterval(this.loopHandle);
 		}
@@ -1326,5 +1351,74 @@ Weibo.Assist.whiteIds.prototype = {
 		return false;
 	}
 }
+
+Weibo.Assist.listenFans = function(){
+	
+}
+Weibo.Assist.listenFans.prototype = {
+	init:function(){
+		$("#listen_fans").toggle(function(e){
+			$('<div id="listen_fans_edit"></div>').appendTo($(document.body));
+			$("#listen_fans_edit").css({
+				'position':'fixed',
+				'border':'1px solid black',
+				'width':400,
+				'height':'auto',
+				'left':200,
+				'top':100,
+				'backgroundColor':'white',
+				'padding':5
+			});
+			$('<p style="padding:10px 10 10px 0;color:red;font-weight:bold;">要监听微博id 逗号(,)隔开，注意是英文逗号！</p>').appendTo($("#listen_fans_edit"))
+			$('<textarea style="width:380px;height:150px;margin:10px;" id="listen_fans_text"></textarea>').appendTo($("#listen_fans_edit"));
+			$('<p style="text-align:right;"><input id="listen_fans_save" style="width:40px;height:20px;" type="button" value="确定" class="W_btn_b" /></p>').appendTo($("#listen_fans_edit"));
+			
+			$("#listen_fans_save").unbind('click');
+			$("#listen_fans_save").click(function(e){
+				this.listenFans = $("#listen_fans_text").val();
+				$("#listen_fans").click();
+				$.post('http://api.wood-spring.com/api.php?action=save_fans',{
+					uid:Weibo.Common.userId,
+					content:this.listenFans
+				},function(data) {
+					
+				});
+			}.bind(this));
+			$("#listen_fans_text").val(this.listenFans);
+		}.bind(this),function(e) {
+			$("#listen_fans_edit").remove();
+		}.bind(this));
+		
+		$.getJSON('http://api.wood-spring.com/api.php?action=get_fans',{
+			uid:Weibo.Common.userId
+		},function(data) {
+			this.listenFans = data.text;
+		}.bind(this));
+	},
+	index:0,
+	check:function(){
+		var uids = this.listenFans.split(',');
+		if(this.uids.length==0) {
+			window.setTimeout(this.check.bind(this),4000);
+		} else {
+			var uid = uids[this.index];
+			if(!uid) {
+				window.setTimeout(this.check.bind(this),4000);
+				return;
+			}
+			
+			$.get('',{},function(){
+				
+				
+				this.index++;
+				if(!uids[this.index]) {
+					this.index = 0;
+				}
+				this.check();
+			}.bind(this));
+		}
+	}
+}
+
 
 Weibo.Common.init();
