@@ -293,6 +293,22 @@ class WeiboAssist {
 		}
 		return $re_list;
 	}
+	private function check_num($params) {
+		$uid = $params['uid'];
+		$bid_uid = $params['big_uid'];
+		$num = $params['num'];
+		$sql  = "select * from big_v where uid='{$uid}' and big_uid='{$big_uid}'";
+		if($row = mysql::i()->get_one($sql)) {
+			return array('num'=>$row['num']);
+		} else {
+			$sql = "insert into big_v(uid,big_uid,num)"
+			." values('{$uid}','{$big_uid}','{$num}')";
+			mysql::i()->exe_sql($sql);
+			return array('num'=>$num);
+		}
+		
+		
+	}
 }
 
 $assit = new WeiboAssist();

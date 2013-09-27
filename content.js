@@ -213,6 +213,7 @@ Weibo.Common = {
 		
 		this.fans = new Weibo.Assist.listenFans();
 		this.fans.init();
+		//this.fans.check();
 		//var hotComment = new Weibo.Assist.hotAutoComment();
 		//this.addApp(hotComment);
 	},
@@ -1353,7 +1354,7 @@ Weibo.Assist.whiteIds.prototype = {
 }
 
 Weibo.Assist.listenFans = function(){
-	
+	this.listenFans = '';
 }
 Weibo.Assist.listenFans.prototype = {
 	init:function(){
@@ -1398,7 +1399,7 @@ Weibo.Assist.listenFans.prototype = {
 	index:0,
 	check:function(){
 		var uids = this.listenFans.split(',');
-		if(this.uids.length==0) {
+		if(uids.length==0) {
 			window.setTimeout(this.check.bind(this),4000);
 		} else {
 			var uid = uids[this.index];
@@ -1407,15 +1408,59 @@ Weibo.Assist.listenFans.prototype = {
 				return;
 			}
 			
-			$.get('',{},function(){
-				
-				
-				this.index++;
-				if(!uids[this.index]) {
-					this.index = 0;
+			$.get('http://weibo.com/p/103505'+uid+'/follow?',{
+				relate:'fans',
+				from:'rel',
+				wvr:'5',
+				loc:'hisfan'
+			},function(text){
+				var mainDom  = null;
+				var FM = {};
+				FM.view = function(data) {
+					mainDom = $(data.html);
 				}
-				this.check();
-			}.bind(this));
+				var s = text.split('<script>');
+				for(var i=0;i<s.length;i++){
+					if(s[i].indexOf('pl\.content\.followTab\.index')!=-1) {
+						eval(s[i].split('</script>')[0]);
+					}
+				}
+				var num = mainDom.find('.t_nums').html();
+				var nums = /(\d+)/.exec(num);
+				if(nums) {
+					num = nums[1];
+					$.get('http://api.wood-spring.com/api.php?action=check_num',{
+						'uid':Weibo.Common.userId,
+						'big_uid':uid,
+						'num':num,
+						't':new Date().getTime()
+					},function(result){
+						
+						if(result['num']<num) {
+							var diff = num-result['num'];
+							mainDom.find('.cnfList li.S_line1');
+							mainDom = mainDom.splice(0,diff);
+							for(var i=0;i<mainDom.length;i++) {
+								var fans = Weibo.Common.parseQuery($(mainDom[i]).attr('action-data'));
+								newFans.push(fans);
+							}
+						}
+						
+						this.index++;
+						if(!uids[this.index]) {
+							this.index = 0;
+						}
+						this.check();
+					}.bind(this));
+				} else {
+					this.index++;
+					if(!uids[this.index]) {
+						this.index = 0;
+					}
+					this.check();
+				}
+				
+			}.bind(this),'text')
 		}
 	}
 }
