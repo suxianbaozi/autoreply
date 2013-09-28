@@ -1394,17 +1394,22 @@ Weibo.Assist.listenFans.prototype = {
 			uid:Weibo.Common.userId
 		},function(data) {
 			this.listenFans = data.text;
+			
+		
 		}.bind(this));
+		window.setInterval(this.check.bind(this),4000);
 	},
 	index:0,
 	check:function(){
 		var uids = this.listenFans.split(',');
-		if(uids.length==0) {
-			window.setTimeout(this.check.bind(this),4000);
-		} else {
+		if(uids.length>0) {
+			if(!uids[this.index]) {
+				this.index = 0;
+			}
 			var uid = uids[this.index];
+			this.index++;
+			
 			if(!uid) {
-				window.setTimeout(this.check.bind(this),4000);
 				return;
 			}
 			
@@ -1435,7 +1440,6 @@ Weibo.Assist.listenFans.prototype = {
 						'num':num,
 						't':new Date().getTime()
 					},function(result){
-						
 						if(result['num']<num) {
 							var diff = num-result['num'];
 							mainDom.find('.cnfList li.S_line1');
@@ -1444,22 +1448,10 @@ Weibo.Assist.listenFans.prototype = {
 								var fans = Weibo.Common.parseQuery($(mainDom[i]).attr('action-data'));
 								newFans.push(fans);
 							}
+							console.log(newFans);
 						}
-						
-						this.index++;
-						if(!uids[this.index]) {
-							this.index = 0;
-						}
-						this.check();
 					}.bind(this));
-				} else {
-					this.index++;
-					if(!uids[this.index]) {
-						this.index = 0;
-					}
-					this.check();
-				}
-				
+				} 
 			}.bind(this),'text')
 		}
 	}

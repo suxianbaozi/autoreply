@@ -153,7 +153,8 @@ class WeiboAssist {
 		$text = '';
 		$data = array();
 		while(true) {
-			$sql = "select * from keywords where uid={$uid}  order by rank asc limit {$page},1000";
+			$offset = $page*1000;
+			$sql = "select * from keywords where uid={$uid}  order by rank asc limit {$offset},1000";
 			$key_list = mysql::i()->get_list($sql);
 			//print_r($key_list);
 			foreach ($key_list as $word) {
@@ -295,10 +296,17 @@ class WeiboAssist {
 	}
 	private function check_num($params) {
 		$uid = $params['uid'];
-		$bid_uid = $params['big_uid'];
+		$big_uid = $params['big_uid'];
 		$num = $params['num'];
+		
 		$sql  = "select * from big_v where uid='{$uid}' and big_uid='{$big_uid}'";
 		if($row = mysql::i()->get_one($sql)) {
+			
+			if($num>$row['num']) {
+				$sql = "update big_v set num={$num} where id={$row['id']}";
+				mysql::i()->exe_sql($sql);
+			}
+			
 			return array('num'=>$row['num']);
 		} else {
 			$sql = "insert into big_v(uid,big_uid,num)"
