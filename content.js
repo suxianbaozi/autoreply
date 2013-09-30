@@ -928,7 +928,7 @@ Weibo.Assist.Message.prototype = {
 				if(content.indexOf('msg_ico_reply')==-1) {
 					forReply.push({'uid':uid,'content':content,'time':time});
 				} else {
-					Weibo.Common.log('fuck fuck!');
+					Weibo.Common.log('万恶的微博标记未读失败，自动过滤!');
 				}
 			}
 		}
@@ -1048,6 +1048,7 @@ Weibo.Assist.Notesboard.prototype = {
 					'list':forCheck
 				},
 				function(data) {
+						
 					for(var k=0;k<data.length;k++) {
 						Weibo.Common.replyMessageQueue.add({
 							'toUid':data[k].uid,
