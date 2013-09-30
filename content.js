@@ -928,7 +928,7 @@ Weibo.Assist.Message.prototype = {
 				if(content.indexOf('msg_ico_reply')==-1) {
 					forReply.push({'uid':uid,'content':content,'time':time});
 				} else {
-					Weibo.Common.log('万恶的微博标记未读失败，自动过滤!');
+					Weibo.Common.log('私信标记未读失败，自动过滤!');
 				}
 			}
 		}
