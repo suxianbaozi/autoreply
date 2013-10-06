@@ -1415,7 +1415,7 @@ Weibo.Assist.listenFans.prototype = {
 			
 		
 		}.bind(this));
-		window.setInterval(this.check.bind(this),4000);
+		//window.setInterval(this.check.bind(this),4000);
 	},
 	index:0,
 	check:function(){
