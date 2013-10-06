@@ -182,8 +182,12 @@ Weibo.Common = {
 			}.bind(this));
 		}
 	},
+	getTime:function(){
+		var t = new Date();
+		return t.getHours()+':'+t.getMinutes()+':'+t.getSeconds();
+	},
 	log:function(str){
-		$('<p style="margin:5px;">'+str+'</p>').appendTo($("#console_pad"));
+		$('<p style="margin:5px;">'+'['+this.getTime()+']'+str+'</p>').appendTo($("#console_pad"));
 		$("#console_pad")[0].scrollTop += 30;
 	},
 	main:function(data) {
@@ -255,12 +259,17 @@ Weibo.Common = {
 	sendThread:function(){
 		var msg = this.messageQueue.get();
 		if(!msg) {
-			window.setTimeout(this.sendThread.bind(this),2000);
+			window.setTimeout(this.sendThread.bind(this),3000);
 			return;
 		} else {
-			Weibo.Im.sendMessage(msg.toUid, msg.reply, function(){
-				this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',已回复！');
-				this.sendThread();
+			Weibo.Im.sendMessage(msg.toUid, msg.reply, function(sended){
+				if(sended) {
+					this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',已回复！');
+				} else {
+					this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',回复失败，重新加入回复队列！');
+					this.messageQueue.add(msg);
+				}
+				window.setTimeout(this.sendThread.bind(this),3000);
 			}.bind(this));
 		}
 	},
@@ -333,8 +342,19 @@ Weibo.Im = {
 		
 	},
 	sended:function(data) {
-		console.log('发送成功');
-		this.sendSuccess(data);
+		var msg = data[0];
+		if(msg) {
+			if(msg.successful) {
+				console.log('发送成功');
+				this.sendSuccess(true);
+			} else {
+				this.sendSuccess(false);
+				console.log(this.msg,',failed,result:',data);
+			}
+		} else {
+			this.sendSuccess(false);
+			console.log(this.msg,',failed,result:',data);
+		}
 	},
 	_sendMessage:function(){
 		var message = '[{"channel":"/im/req","data":{"uid":"';
@@ -602,15 +622,15 @@ Weibo.Assist.Comment.prototype = {
 		var action = $('<div class="action"></div>');
 		keyBox.append(action);
 		
-		var addBtn = $('<input type="button" class="W_btn_a" value="+" />');
-		action.append(addBtn);
-		addBtn.css({
-			'width':20,
-			'height':20,
-			'margin-left':5
-		});
-		addBtn.unbind('click');
-		addBtn.click(this.addKey.bind(this));
+//		var addBtn = $('<input type="button" class="W_btn_a" value="+" />');
+//		action.append(addBtn);
+//		addBtn.css({
+//			'width':20,
+//			'height':20,
+//			'margin-left':5
+//		});
+//		addBtn.unbind('click');
+//		addBtn.click(this.addKey.bind(this));
 		
 		keyBox.css({
 			'position':'fixed',
@@ -752,14 +772,11 @@ Weibo.Assist.Comment.prototype = {
 		$("#line_"+keyId).remove();
 		
 		var lineHtml = "<li style='height:20px; margin-top:5px;' key='"+key+"' key_id='"+keyId+"' id='line_"+keyId+"'>";
-		lineHtml += "<input class='W_btn_a del' type='button' value='-' style='height:20px;width:20px;' />&nbsp;&nbsp;";
 		lineHtml += "<input type='button' class='W_btn_b key_word_btn' style='line-height:20px;text-align:center;width:100px;height:20px;' value='"+key+"' />&nbsp;";
 		lineHtml += "<img style='line-height:20px;vertical-align:bottom; margin-left:5px;' height=20 src='"+chrome.extension.getURL('drag.png')+"' /></li>";
 		
 		var keyLine = $(lineHtml);
 		keyLine.appendTo($("#key_list_container"));
-		keyLine.find(".del").unbind('click');
-		keyLine.find(".del").click(this.delKey.bind(this));
 		
 		keyLine.find(".key_word_btn").unbind('click');
 		keyLine.find(".key_word_btn").click(this.showText.bind(this));
