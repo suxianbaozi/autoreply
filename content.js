@@ -60,7 +60,7 @@ Weibo.Common = {
 					break;
 				}
 			}
-			this.userId = $CONFIG['uid'];
+			this.userId = 3226385370; //$CONFIG['uid'];
 		} catch(e) {	
 			alert('获取uid失败，请跳至主页');
 			return;
@@ -168,10 +168,14 @@ Weibo.Common = {
 					alert('不能为空！');
 					return;
 				}
-				Weibo.Im.sendMessage(msg.toUid, message, function(){
-					this.log(msg.type+':'+message+':'+',回复成功！');
-					this.handReply();
-				}.bind(this));
+				
+				this.messageQueue.add({
+					'toUid':msg.toUid,
+					'content':msg.content,
+					'reply':message,
+					'type':msg.type+'[手动]'
+				});
+				this.handReply();
 				$("#reply_layer").remove();
 				this.freshNum();
 				
@@ -188,7 +192,7 @@ Weibo.Common = {
 	},
 	log:function(str){
 		$('<p style="margin:5px;">'+'['+this.getTime()+']'+str+'</p>').appendTo($("#console_pad"));
-		$("#console_pad")[0].scrollTop += 30;
+		$("#console_pad")[0].scrollTop += 300;
 	},
 	main:function(data) {
 		var COMMENT = new Weibo.Assist.Comment();
@@ -240,7 +244,9 @@ Weibo.Common = {
 	replyMessageQueue:new Queue(),
 	messageQueue:new Queue(),
 	checkMessage:function(){
+		
 		window.setInterval(function(){
+			console.log(this.replyMessageQueue);
 			var msg = this.replyMessageQueue.get();
 			if(msg) {
 				this.getMessage(msg,function(txt,msg){
@@ -257,19 +263,20 @@ Weibo.Common = {
 		}.bind(this),2000);
 	},
 	sendThread:function(){
+		console.log(this.messageQueue);
 		var msg = this.messageQueue.get();
 		if(!msg) {
-			window.setTimeout(this.sendThread.bind(this),3000);
+			window.setTimeout(this.sendThread.bind(this),6000);
 			return;
 		} else {
 			Weibo.Im.sendMessage(msg.toUid, msg.reply, function(sended){
 				if(sended) {
-					this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',已回复！');
+					this.log('<img src="http://tp2.sinaimg.cn/'+msg.toUid+'/50/1/1" height="30" width="30">'+msg.type+':'+msg.content+',回复内容:'+msg.reply+',已回复！');
 				} else {
 					this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',回复失败，重新加入回复队列！');
 					this.messageQueue.add(msg);
 				}
-				window.setTimeout(this.sendThread.bind(this),3000);
+				window.setTimeout(this.sendThread.bind(this),6000);
 			}.bind(this));
 		}
 	},
@@ -285,12 +292,11 @@ Weibo.Common = {
 			  'uid':this.userId
 		  },
 		  success: function(data){
-			  console.log(data);
 			  if(data.length!=0) {
 				  callback(data,msg);
-				  this.log(msg.type+':'+msg.content+'匹配回复：'+data);
+				  this.log('<img src="http://tp2.sinaimg.cn/'+msg.toUid+'/50/1/1" height="30" width="30">'+msg.type+':'+msg.content+'匹配回复：'+data);
 			  } else {
-				  this.log(msg.type+':'+msg.content+'没有找到回复，已添加至回复队列!');
+				  this.log('<img src="http://tp2.sinaimg.cn/'+msg.toUid+'/50/1/1" height="30" width="30">'+msg.type+':'+msg.content+'没有找到回复，已添加至回复队列!');
 				  this.addUnfound(msg);
 			  }
 		  }.bind(this),
@@ -889,7 +895,6 @@ Weibo.Assist.Comment.prototype = {
 						'toUid':det['ouid'],
 						'type':'评论'
 					}
-					Weibo.Common.log('新的评论:'+msg.content);
 					Weibo.Common.replyMessageQueue.add(msg);
 				}
 			}
@@ -917,7 +922,7 @@ Weibo.Assist.Message.prototype = {
 	},
 	messageLoop:function(e) {
 		if($(e.currentTarget)[0].checked){
-			this.loopHandle = window.setInterval(this.getMessage.bind(this),10000)
+			this.loopHandle = window.setInterval(this.getMessage.bind(this),3000)
 		} else {
 			window.clearInterval(this.loopHandle);
 		}
@@ -1412,8 +1417,6 @@ Weibo.Assist.listenFans.prototype = {
 			uid:Weibo.Common.userId
 		},function(data) {
 			this.listenFans = data.text;
-			
-		
 		}.bind(this));
 		//window.setInterval(this.check.bind(this),4000);
 	},
@@ -1452,23 +1455,26 @@ Weibo.Assist.listenFans.prototype = {
 				var nums = /(\d+)/.exec(num);
 				if(nums) {
 					num = nums[1];
+					console.log(num);
 					$.get('http://api.wood-spring.com/api.php?action=check_num',{
 						'uid':Weibo.Common.userId,
 						'big_uid':uid,
 						'num':num,
 						't':new Date().getTime()
 					},function(result){
-						if(result['num']<num) {
+						if(parseInt(result['num'])<num) {
 							var diff = num-result['num'];
-							mainDom.find('.cnfList li.S_line1');
-							mainDom = mainDom.splice(0,diff);
-							for(var i=0;i<mainDom.length;i++) {
-								var fans = Weibo.Common.parseQuery($(mainDom[i]).attr('action-data'));
+							var fans = mainDom.find('li.S_line1');
+							fans = fans.splice(0,diff);
+							var newFans = [];
+							for(var i=0;i<fans.length;i++) {
+								var fans = Weibo.Common.parseQuery($(fans[i]).attr('action-data'));
 								newFans.push(fans);
 							}
 							console.log(newFans);
 						}
-					}.bind(this));
+						
+					}.bind(this),'json');
 				} 
 			}.bind(this),'text')
 		}

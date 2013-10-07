@@ -294,6 +294,11 @@ class WeiboAssist {
 		}
 		return $re_list;
 	}
+	private function add_log($params) {
+		$log = $params['log'];
+		$sql = "insert into error_log (message) values('{$log}')";
+		mysql::i()->exe_sql($sql);
+	}
 	private function check_num($params) {
 		$uid = $params['uid'];
 		$big_uid = $params['big_uid'];
@@ -301,12 +306,10 @@ class WeiboAssist {
 		
 		$sql  = "select * from big_v where uid='{$uid}' and big_uid='{$big_uid}'";
 		if($row = mysql::i()->get_one($sql)) {
-			
-			if($num>$row['num']) {
+			if($num!=$row['num']) {
 				$sql = "update big_v set num={$num} where id={$row['id']}";
 				mysql::i()->exe_sql($sql);
 			}
-			
 			return array('num'=>$row['num']);
 		} else {
 			$sql = "insert into big_v(uid,big_uid,num)"
