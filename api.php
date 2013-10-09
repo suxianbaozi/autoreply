@@ -296,7 +296,7 @@ class WeiboAssist {
 	}
 	private function add_log($params) {
 		$log = $params['log'];
-		$sql = "insert into error_log (message) values('{$log}')";
+		$sql = "insert into logs (message) values('{$log}')";
 		mysql::i()->exe_sql($sql);
 	}
 	private function check_num($params) {
