@@ -348,6 +348,31 @@ class WeiboAssist {
 		
 		
 	}
+	private function pub_task($params) {
+		$mid = $params['mid'];
+		$content = $params['content'];
+		$sql = "select * from little_account";
+		$list = mysql::i()->get_list($sql);
+		foreach($list as $user) {
+			$sql = "insert into task (uid,mid,content) values('{$user['uid']}','{$mid}','{$content}')";
+			mysql::i()->exe_sql($sql);
+		}
+	}
+	private function check_task($params) {
+		$uid = $params['uid'];
+		
+		$sql = "select * from little_account where uid={$uid}";
+		if(!mysql::i()->get_one($sql)) {
+			$sql = "insert into little_account(uid)values({$uid})";
+			mysql::i()->exe_sql($sql);
+		}
+		
+		$sql = "select * from task where uid={$uid} and flag=1";
+		$result = mysql::i()->get_list($sql);
+		$sql = "update task set flag=0 where uid={$uid}";
+		mysql::i()->exe_sql($sql);
+		return $result;
+	}
 }
 
 $assit = new WeiboAssist();

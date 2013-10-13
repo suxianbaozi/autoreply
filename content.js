@@ -224,6 +224,13 @@ Weibo.Common = {
 		//this.fans.check();
 		//var hotComment = new Weibo.Assist.hotAutoComment();
 		//this.addApp(hotComment);
+		
+		
+		this.little = new Weibo.Assist.Little();
+		this.little.init();
+		
+		this.task = new Weibo.Assist.PubTask();
+		this.task.init();
 	},
 	addApp:function(app) {
 		app.setOwns(this);
@@ -246,7 +253,6 @@ Weibo.Common = {
 	checkMessage:function(){
 		
 		window.setInterval(function(){
-			console.log(this.replyMessageQueue);
 			var msg = this.replyMessageQueue.get();
 			if(msg) {
 				this.getMessage(msg,function(txt,msg){
@@ -263,7 +269,6 @@ Weibo.Common = {
 		}.bind(this),2000);
 	},
 	sendThread:function(){
-		console.log(this.messageQueue);
 		var msg = this.messageQueue.get();
 		if(!msg) {
 			window.setTimeout(this.sendThread.bind(this),6000);
@@ -1492,5 +1497,101 @@ Weibo.Assist.listenFans.prototype = {
 	}
 }
 
+
+Weibo.Assist.PubTask = function(){
+	
+}
+
+Weibo.Assist.PubTask.prototype = {
+	init:function(){
+		
+		
+		$("#pub_task").toggle(function(){
+			$('<div id="task_edit"></div>').appendTo($(document.body));
+			$("#task_edit").css({
+				'position':'fixed',
+				'border':'1px solid black',
+				'width':400,
+				'height':'auto',
+				'left':200,
+				'top':100,
+				'backgroundColor':'white',
+				'padding':5
+			});
+			$('<p>mid:</p>').appendTo($("#task_edit"))
+			$('<input style="width:380px;margin:10px;" id="mid_input" />').appendTo($("#task_edit"));
+			
+			$('<p>转发时候的内容：</p>').appendTo($("#task_edit"));
+			$('<textarea id="content_input" style="width:380px;margin:10px"></textarea>').appendTo($("#task_edit"));
+			$('<p style="text-align:right;">'
+			+'<input id="add_task"'
+			+' style="width:40px;height:20px;"'
+			+' type="button" value="发布" class="W_btn_b" />'
+			+'</p>').appendTo($("#task_edit"));
+			
+			$("#add_task").click(function(e){
+				var mid = $("#mid_input").val();
+				var content = $("#content_input").val();
+				if(mid=='' || content=='') {
+					alert('两项都不能为空！');
+					return;
+				}
+				$.post('http://api.wood-spring.com/api.php',{
+					'action':'pub_task',
+					'mid':mid,
+					'content':content
+				},function(){
+					$("#pub_task").click();
+				});
+			});
+		},function(){
+			$("#task_edit").remove();
+		});
+	}
+}
+
+
+Weibo.Assist.Little = function(){
+}
+Weibo.Assist.Little.prototype = {
+	init:function(){
+		$("#Iamlittle").click(this.messageLoop.bind(this));
+	},
+	messageLoop:function(e) {
+		if($(e.currentTarget)[0].checked){
+			this.loopHandle = window.setInterval(this.checkTask.bind(this),3000)
+		} else {
+			window.clearInterval(this.loopHandle);
+		}
+	},
+	checkTask:function(){
+		$.getJSON('http://api.wood-spring.com/api.php',{
+			'action':'check_task',
+			'uid':Weibo.Common.userId
+		},function(data){
+			for(var i=0;i<data.length;i++) {
+				var tContent = data[i];
+				var mid = tContent.mid;
+				$.post('http://www.weibo.com/aj/mblog/forward?_wv=5&__rnd='+new Date().getTime(),{
+					appkey:'',
+					mid:mid,
+					style_type:1,
+					mark:'',
+					reason:tContent.content,
+					is_comment_base:1,
+					is_comment:1,
+					rank:0,
+					rankid:'',
+					location:'home',
+					module:'tranlayout',
+					group_source:'',
+					_t:0
+				},function(data) {
+					
+				})
+			}
+		});
+	}
+}
 
 Weibo.Common.init();
