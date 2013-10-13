@@ -170,6 +170,34 @@ class WeiboAssist {
 		return $data;
 	}
 	
+	
+	private function get_message_new($params) {
+		$message = $params['message'];
+		$message = preg_replace('/(\d+)[^\d]+(\d+)/',"\\1-\\2",$message);
+		$uid = $params['uid'];
+		//每次1000条
+		$page = 0;
+		$text = '';
+		$data = array();
+		while(true) {
+			$offset = $page*1000;
+			$sql = "select * from keywords where uid={$uid}  order by rank asc limit {$offset},1000";
+			$key_list = mysql::i()->get_list($sql);
+			//print_r($key_list);
+			foreach ($key_list as $word) {
+				if(strpos($message,$word['key'])!==false) {
+					$data[] = $word['text'];
+				}
+			}
+			if(count($key_list)<1000) {
+				break;
+			}
+			$page++;
+		}
+		return $data;
+	}
+	
+	
 	private function check_at($params) {
 		
 		$uid = $params['uid'];
@@ -296,7 +324,7 @@ class WeiboAssist {
 	}
 	private function add_log($params) {
 		$log = $params['log'];
-		$sql = "insert into logs (message) values('{$log}')";
+		$sql = "insert into error_log (message) values('{$log}')";
 		mysql::i()->exe_sql($sql);
 	}
 	private function check_num($params) {

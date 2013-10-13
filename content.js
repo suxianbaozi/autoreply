@@ -60,7 +60,7 @@ Weibo.Common = {
 					break;
 				}
 			}
-			this.userId = $CONFIG['uid'];//3226385370; 
+			this.userId = 3226385370; //$CONFIG['uid'];
 		} catch(e) {	
 			alert('获取uid失败，请跳至主页');
 			return;
@@ -287,7 +287,7 @@ Weibo.Common = {
 		  type: 'POST',
 		  url: 'http://api.wood-spring.com/api.php',
 		  data: {
-			  'action':'get_message',
+			  'action':'get_message_new',
 			  'message':msg.content,
 			  'uid':this.userId
 		  },
@@ -478,6 +478,10 @@ Weibo.Assist.Comment.prototype = {
 				+'height:30px;" class="W_btn_b" type="button" value="微博监听" /></p>').appendTo($("#left_container"));
 		
 		
+		$('<p><input id="pub_task" style="width:80px; '
+				+'height:30px;" class="W_btn_b" type="button" value="小号转我" /></p>').appendTo($("#left_container"));
+		
+		
 		$("#left_container p").css(
 		{
 			'margin-top':5,
@@ -529,14 +533,14 @@ Weibo.Assist.Comment.prototype = {
 			+'</p><br />';
 		$("#left_container").append(likeOpenBtn);
 		
-		
+		var little = '<p>&nbsp;&nbsp;&nbsp;&nbsp;小号:'
+			+'<input id="Iamlittle"  class="open" type="checkbox" />'
+			+'</p><br />';
+		$("#left_container").append(little);
 		$("#left_container .open").css({
 			marginLeft:10
 		});
 		$("#comment_box").click(this.commentLoop.bind(this));
-		
-		
-		
 		
 		this.loadKeyList();
 		this.loadDefault();
@@ -853,6 +857,13 @@ Weibo.Assist.Comment.prototype = {
 			detail = detail.split('&');
 
 			det = {}
+			
+			$(content).find('a').each(function(index,item) {
+				if($(item).attr('usercard')) {
+					$(item).remove();
+				}
+			});
+			
 			det['comment'] = $(content).text();
 			for(var j=0;j<detail.length;j++) {
 				var keyValue = detail[j].split("=");
