@@ -60,7 +60,7 @@ Weibo.Common = {
 					break;
 				}
 			}
-			this.userId = 3226385370;// $CONFIG['uid'];//3226385370;
+			this.userId =  $CONFIG['uid'];//3226385370;
 		} catch(e) {	
 			alert('获取uid失败，请跳至主页');
 			return;
