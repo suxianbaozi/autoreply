@@ -60,7 +60,7 @@ Weibo.Common = {
 					break;
 				}
 			}
-			this.userId = $CONFIG['uid'];//3226385370;
+			this.userId = 3226385370;// $CONFIG['uid'];//3226385370;
 		} catch(e) {	
 			alert('获取uid失败，请跳至主页');
 			return;
@@ -948,6 +948,7 @@ Weibo.Assist.Message.prototype = {
 		this.comment = c;
 	},
 	page:1,
+	messageLock:{},
 	initData:function(data){
 		var msgList = data.html;
 		var dom=  $(msgList);
@@ -964,13 +965,18 @@ Weibo.Assist.Message.prototype = {
 			if(newMsg>0) {
 				newNum++;
 				if(content.indexOf('msg_ico_reply')==-1) {
-					forReply.push({'uid':uid,'content':content,'time':time});
+					console.log(this.messageLock);
+					if(!this.messageLock[uid+content]) {
+						forReply.push({'uid':uid,'content':content,'time':time});
+						this.messageLock[uid+content]=1;
+					} else {
+						Weibo.Common.log('那个还没完这个就来啦，自定过滤！');
+					}
 				} else {
 					Weibo.Common.log('私信标记未读失败，自动过滤!');
 				}
 			}
 		}
-		
 		if(forReply.length>0) {
 			$.post('http://api.wood-spring.com/api.php?action=check_message',{
 				'forReply':forReply,
@@ -989,10 +995,11 @@ Weibo.Assist.Message.prototype = {
 								'content':cell['content'],
 								'type':'私信'
 							});
-						},'text');
-					})(cell)
+							delete this.messageLock[cell['uid']+cell['content']];
+						}.bind(this),'text');
+					}.bind(this))(cell)
 				}
-			},'json');
+			}.bind(this),'json');
 		}
 		
 		
