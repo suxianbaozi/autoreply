@@ -542,10 +542,21 @@ Weibo.Assist.Comment.prototype = {
 			+'<input id="Iamlittle"  class="open" type="checkbox" />'
 			+'</p><br />';
 		$("#left_container").append(little);
+		
+		
+		var fans_listen = '<p>&nbsp;&nbsp;&nbsp;&nbsp;监听:'
+			+'<input id="fans_listen_check"  class="open" type="checkbox" />'
+			+'</p><br />';
+		$("#left_container").append(fans_listen);
+		
+		
+		
 		$("#left_container .open").css({
 			marginLeft:10
 		});
 		$("#comment_box").click(this.commentLoop.bind(this));
+		
+		
 		
 		this.loadKeyList();
 		this.loadDefault();
@@ -1416,22 +1427,30 @@ Weibo.Assist.listenFans.prototype = {
 				'backgroundColor':'white',
 				'padding':5
 			});
-			$('<p style="padding:10px 10 10px 0;color:red;font-weight:bold;">要监听微博id 逗号(,)隔开，注意是英文逗号！</p>').appendTo($("#listen_fans_edit"))
-			$('<textarea style="width:380px;height:150px;margin:10px;" id="listen_fans_text"></textarea>').appendTo($("#listen_fans_edit"));
+			$('<p style="font-weight:bold;">要监听微博id 逗号(,)隔开，注意是英文逗号！</p>').appendTo($("#listen_fans_edit"));
+			$('<textarea style="width:380px;margin:10px;" id="listen_fans_text"></textarea>').appendTo($("#listen_fans_edit"));
+			$('<p style="font-weight:bold;">要发送的私信：</p>').appendTo($("#listen_fans_edit"));
+			$('<textarea style="width:380px;margin:10px;" id="fans_message_input"></textarea>').appendTo($("#listen_fans_edit"));
 			$('<p style="text-align:right;"><input id="listen_fans_save" style="width:40px;height:20px;" type="button" value="确定" class="W_btn_b" /></p>').appendTo($("#listen_fans_edit"));
 			
 			$("#listen_fans_save").unbind('click');
 			$("#listen_fans_save").click(function(e){
 				this.listenFans = $("#listen_fans_text").val();
+				this.fansMessage = $("#fans_message_input").val();
+				if(this.fansMessage=='') {
+					alert('私信不能为空!');return;
+				}
 				$("#listen_fans").click();
 				$.post('http://api.wood-spring.com/api.php?action=save_fans',{
 					uid:Weibo.Common.userId,
-					content:this.listenFans
+					content:this.listenFans,
+					fans_message:this.fansMessage
 				},function(data) {
 					
 				});
 			}.bind(this));
 			$("#listen_fans_text").val(this.listenFans);
+			$("#fans_message_input").val(this.fansMessage);
 		}.bind(this),function(e) {
 			$("#listen_fans_edit").remove();
 		}.bind(this));
@@ -1440,8 +1459,16 @@ Weibo.Assist.listenFans.prototype = {
 			uid:Weibo.Common.userId
 		},function(data) {
 			this.listenFans = data.text;
+			this.fansMessage = data.fans_message;
 		}.bind(this));
-		//window.setInterval(this.check.bind(this),4000);
+		$("#fans_listen_check").click(this.messageLoop.bind(this));
+	},
+	messageLoop:function(e) {
+		if($(e.currentTarget)[0].checked){
+			this.loopHandle = window.setInterval(this.check.bind(this),3000)
+		} else {
+			window.clearInterval(this.loopHandle);
+		}
 	},
 	index:0,
 	check:function(){
@@ -1492,9 +1519,14 @@ Weibo.Assist.listenFans.prototype = {
 							var newFans = [];
 							for(var i=0;i<fans.length;i++) {
 								var fans = Weibo.Common.parseQuery($(fans[i]).attr('action-data'));
-								newFans.push(fans);
+								console.log('新粉',fans);
+								Weibo.Common.messageQueue.add({
+									'toUid':fans.uid,
+									'content':'粉丝监听',
+									'reply':this.fansMessage,
+									'type':'新粉丝'
+								});
 							}
-							console.log(newFans);
 						}
 						
 					}.bind(this),'json');

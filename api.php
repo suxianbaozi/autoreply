@@ -277,12 +277,13 @@ class WeiboAssist {
 	private function save_fans($params) {
 		$uid = $params['uid'];
 		$content = $params['content'];
+		$fans_message = $params['fans_message'];
 		$sql = "select * from listen_fans where uid={$uid}";
 		if($row = mysql::i()->get_one($sql)) {
-			$sql = "update listen_fans set content='{$content}' where id={$row['id']}";
+			$sql = "update listen_fans set content='{$content}',fans_message='{$fans_message}' where id={$row['id']}";
 			mysql::i()->exe_sql($sql);
 		} else {
-			$sql = "insert into listen_fans(uid,content) values('{$uid}','{$content}')";
+			$sql = "insert into listen_fans(uid,content,fans_message) values('{$uid}','{$content}','{$fans_message}')";
 			mysql::i()->exe_sql($sql);
 		}
 	}
@@ -290,7 +291,7 @@ class WeiboAssist {
 		$uid = $params['uid'];
 		$sql = "select * from listen_fans where uid={$uid}";
 		$row = mysql::i()->get_one($sql);
-		return array('text'=>$row['content'].'');
+		return array('text'=>$row['content'].'','fans_message'=>$row['fans_message']);
 	}
 	
 	private function get_black($params) {
