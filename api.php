@@ -1,5 +1,4 @@
 <?php
-
 class mysql {
 
 	public static $me = null;
@@ -352,30 +351,113 @@ class WeiboAssist {
 	private function pub_task($params) {
 		$mid = $params['mid'];
 		$content = $params['content'];
-		$sql = "select * from little_account";
-		$list = mysql::i()->get_list($sql);
-		foreach($list as $user) {
-			$sql = "insert into task (uid,mid,content) values('{$user['uid']}','{$mid}','{$content}')";
+		$uid = $params['uid'];
+		$frequency = $params['frequency'];
+		$sql = "select * from task where uid={$uid}";
+		
+		
+		if(mysql::i()->get_one($sql)) {
+			$sql = "update task "
+			."set mid='{$mid}',"
+			."content='{$content}',"
+			."frequency='{$frequency}'"
+			." where uid={$uid}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into task (uid,mid,content,frequency) values("
+			."'{$uid}'"
+			.",'{$mid}','{$content}','{$frequency}')";
 			mysql::i()->exe_sql($sql);
 		}
+		return array();
+	}
+	private function get_task_detail($params) {
+		$uid = $params['uid'];
+		$sql = "select * from task where uid={$uid}";
+		$task = mysql::i()->get_one($sql);
+		return array(
+			'mid'=>$task['mid'].'',
+			'content'=>$task['content'].'',
+			'frequency'=>$task['frequency'].''
+		);
 	}
 	private function check_task($params) {
 		$uid = $params['uid'];
 		
 		$sql = "select * from little_account where uid={$uid}";
-		if(!mysql::i()->get_one($sql)) {
-			$sql = "insert into little_account(uid)values({$uid})";
+		$t = time();
+		if($row = mysql::i()->get_one($sql)) {
+			$sql = "update little_account set last_update={$t} where id={$row['id']}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into little_account(uid,last_update)values({$uid},{$t})";
 			mysql::i()->exe_sql($sql);
 		}
-		
-		$sql = "select * from task where uid={$uid} and flag=1";
-		$result = mysql::i()->get_list($sql);
-		$sql = "update task set flag=0 where uid={$uid}";
+		$sql = "select * from task";
+		$result = mysql::i()->get_one($sql);
+		return array(
+			'mid'=>$result['mid'].'',
+			'content'=>$result['content'].'',
+			'frequency'=>$result['frequency'].''
+		);
+	}
+	private function commend_did($params) {
+		$mid = $params['mid'];
+		$cid = $params['cid'];
+		$uid = $params['uid'];
+		$sql = "insert into comment_did(mid,cid,uid) values('{$mid}','{$cid}','{$uid}')";
 		mysql::i()->exe_sql($sql);
-		return $result;
+		return array();
+	}
+	private function check_mid($params) {
+		$mid = $params['mid'];
+		$uid = $params['uid'];
+		$sql =  "select * from comment_did where mid={$mid} and uid={$uid}";
+		$result = mysql::i()->get_one($sql);
+		if($result) {
+			return array(
+				'exist'=>$result		
+			);			
+		} else {
+			return array();
+		}
+	}
+	
+	private function pub_fans_task($params) {
+		$fuid = $params['fuid'];
+		$content = $params['content'];
+		$t = time()-60;
+		$sql = "select * from little_account where last_update >={$t}";
+		//echo $sql;
+		$list = mysql::i()->get_list($sql);
+		//print_r($list);
+		$index = $_SESSION['u_index'];
+		echo $index;echo PHP_EOL;
+		$index = $index*1;
+		if($index>=count($list)) {
+			$index = 0;
+		}
+		$u =  $list[$index];
+		if(!$u) {
+			return;
+		}
+		$sql = "insert into fans_task(fuid,ouid,content) "
+		."values({$fuid},{$u['uid']},'{$content}')";
+		mysql::i()->exe_sql($sql);
+		
+		$_SESSION['u_index'] = ++$index;
+	}
+	
+	private function get_fans_task($params) {
+		$uid = $params['uid'];
+		$sql = "select * from fans_task where ouid={$uid}";
+		$rows =  mysql::i()->get_list($sql);
+		$sql = "delete from fans_task where ouid={$uid}";
+		mysql::i()->exe_sql($sql);
+		return $rows;
 	}
 }
-
+session_start();
 $assit = new WeiboAssist();
 $assit->run();
 ?>
