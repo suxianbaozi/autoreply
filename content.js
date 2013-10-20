@@ -1566,6 +1566,9 @@ Weibo.Assist.PubTask.prototype = {
 			$('<textarea id="content_input" style="width:380px;height:200px;margin:10px"></textarea>').appendTo($("#task_edit"));
 			
 			var frequencyEdit = '<p>频率:<select id="frequency">';
+			frequencyEdit += '<option value="'+(10)+'">'+10+'秒'+'</option>';
+			frequencyEdit += '<option value="'+(20)+'">'+20+'秒'+'</option>';
+			frequencyEdit += '<option value="'+(30)+'">'+30+'秒'+'</option>';
 			for(var i=1;i<=60;i++) {
 				frequencyEdit += '<option value="'+(i*60)+'">'+i+'分钟'+'</option>';
 			}
