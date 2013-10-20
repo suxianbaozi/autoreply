@@ -393,7 +393,7 @@ class WeiboAssist {
 			$sql = "insert into little_account(uid,last_update)values({$uid},{$t})";
 			mysql::i()->exe_sql($sql);
 		}
-		$sql = "select * from task order by id desc";
+		$sql = "select * from task where uid={$uid}";
 		$result = mysql::i()->get_one($sql);
 		return array(
 			'mid'=>$result['mid'].'',
