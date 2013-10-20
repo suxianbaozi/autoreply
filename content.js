@@ -485,7 +485,7 @@ Weibo.Assist.Comment.prototype = {
 		
 		
 		$('<p><input id="pub_task" style="width:80px; '
-				+'height:30px;" class="W_btn_b" type="button" value="小号转我" /></p>').appendTo($("#left_container"));
+				+'height:30px;" class="W_btn_b" type="button" value="小号评论" /></p>').appendTo($("#left_container"));
 		
 		
 		$("#left_container p").css(
@@ -1562,7 +1562,7 @@ Weibo.Assist.PubTask.prototype = {
 			$('<p>mid:(逗号隔开)</p>').appendTo($("#task_edit"))
 			$('<textarea style="width:380px;height:100px;margin:10px;" id="mid_input" ></textarea>').appendTo($("#task_edit"));
 			
-			$('<p>转发时候的内容：(竖线隔开“|”)</p>').appendTo($("#task_edit"));
+			$('<p>评论内容：(竖线隔开“|”)</p>').appendTo($("#task_edit"));
 			$('<textarea id="content_input" style="width:380px;height:200px;margin:10px"></textarea>').appendTo($("#task_edit"));
 			
 			var frequencyEdit = '<p>频率:<select id="frequency">';

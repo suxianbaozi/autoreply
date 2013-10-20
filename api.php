@@ -393,7 +393,7 @@ class WeiboAssist {
 			$sql = "insert into little_account(uid,last_update)values({$uid},{$t})";
 			mysql::i()->exe_sql($sql);
 		}
-		$sql = "select * from task";
+		$sql = "select * from task order by id desc";
 		$result = mysql::i()->get_one($sql);
 		return array(
 			'mid'=>$result['mid'].'',
@@ -412,12 +412,14 @@ class WeiboAssist {
 	private function check_mid($params) {
 		$mid = $params['mid'];
 		$uid = $params['uid'];
-		$sql =  "select * from comment_did where mid={$mid} and uid={$uid}";
+		$sql =  "select * from comment_did where mid={$mid} and uid={$uid} order by id desc";
 		$result = mysql::i()->get_one($sql);
 		if($result) {
+			$sql = "delete from comment_did where id={$result['id']}";
+			mysql::i()->exe_sql($sql);			
 			return array(
 				'exist'=>$result		
-			);			
+			);
 		} else {
 			return array();
 		}
