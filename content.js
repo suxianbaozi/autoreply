@@ -441,7 +441,7 @@ Weibo.Assist.Comment.prototype = {
 	'init':function(){
 		var div = $("<div></div>");
 		$(document.body).append(div);
-		$(div).html('<div id="left_container"></div>');
+		$(div).html('<div id="left_container" style="height:300px;overflow:auto;"></div>');
 		$(div).attr('class','gn_topmenulist');
 		
 		$(div).css({
