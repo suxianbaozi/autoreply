@@ -876,7 +876,7 @@ Weibo.Assist.Comment.prototype = {
 			det = {}
 			
 			$(content).find('a').each(function(index,item) {
-				if($(item).attr('usercard')) {
+				if($(item).attr('usercard') && ($(item).attr('render')!='ext')) {
 					$(item).remove();
 				}
 			});
