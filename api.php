@@ -428,26 +428,69 @@ class WeiboAssist {
 	private function pub_fans_task($params) {
 		$fuid = $params['fuid'];
 		$content = $params['content'];
-		$t = time()-60;
-		$sql = "select * from little_account where last_update >={$t}";
-		//echo $sql;
-		$list = mysql::i()->get_list($sql);
-		//print_r($list);
-		$index = $_SESSION['u_index'];
-		echo $index;echo PHP_EOL;
-		$index = $index*1;
-		if($index>=count($list)) {
-			$index = 0;
-		}
-		$u =  $list[$index];
-		if(!$u) {
-			return;
-		}
-		$sql = "insert into fans_task(fuid,ouid,content) "
-		."values({$fuid},{$u['uid']},'{$content}')";
-		mysql::i()->exe_sql($sql);
 		
-		$_SESSION['u_index'] = ++$index;
+		$sql = "select * from fans_task_tmp";
+		$tmp_list = mysql::i()->get_list($sql);
+		
+		
+		
+		
+		
+		
+		foreach ($tmp_list as $task) { 
+			$user = $this->get_one_user_for_task();
+			if($user) {
+				$sql = "insert into fans_task(fuid,ouid,content) "
+				."values({$task['fuid']},{$user['uid']},'{$task['content']}')";
+				mysql::i()->exe_sql($sql);
+				$sql = "delete  from fans_task_tmp where id={$task['id']}";
+				mysql::i()->exe_sql($sql);
+			}
+		}
+		
+		
+		$task = array(
+				'fuid'=>$fuid,
+				'content'=>$content
+		);
+		
+		$user = $this->get_one_user_for_task();
+		
+		if($user) {
+			$sql = "insert into fans_task(fuid,ouid,content) "
+			."values({$task['fuid']},{$user['uid']},'{$task['content']}')";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into fans_task_tmp(fuid,content) values({$task['fuid']},'{$task['content']}')";
+			
+			mysql::i()->exe_sql($sql);
+		}
+		
+		return array();
+	}
+	
+	private function get_one_user_for_task(){
+		
+		$dateindex = date("Ymd");
+		//小于
+		$sql = "select * from little_account where dateindex<{$dateindex}";
+		$list = mysql::i()->get_list($sql);
+		$user = array();
+		if($list) {
+			$user = $list[0];
+			$sql = "update little_account set num=9 , dateindex={$dateindex} where id={$user['id']}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "select * from little_account where dateindex={$dateindex} and num>0";
+			$list = mysql::i()->get_list($sql);
+			if($list) {
+				$user = $list[0];
+				$num_remain = $user['num']-1;
+				$sql = "update little_account set num = {$num_remain} where id={$user['id']}";
+				mysql::i()->exe_sql($sql);
+			}
+		}
+		return $user;
 	}
 	
 	private function get_fans_task($params) {
