@@ -371,6 +371,32 @@ class WeiboAssist {
 		}
 		return array();
 	}
+	
+	private function pub_forward_task($params) {
+		$mid = $params['mid'];
+		$content = $params['content'];
+		$uid = $params['uid'];
+		$frequency = $params['frequency'];
+		$sql = "select * from forward_task where uid={$uid}";
+	
+	
+		if(mysql::i()->get_one($sql)) {
+			$sql = "update forward_task "
+			."set mid='{$mid}',"
+			."content='{$content}',"
+			."frequency='{$frequency}'"
+			." where uid={$uid}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into forward_task (uid,mid,content,frequency) values("
+			."'{$uid}'"
+			.",'{$mid}','{$content}','{$frequency}')";
+			mysql::i()->exe_sql($sql);
+		}
+		return array();
+	}
+	
+	
 	private function get_task_detail($params) {
 		$uid = $params['uid'];
 		$sql = "select * from task where uid={$uid}";
@@ -379,6 +405,16 @@ class WeiboAssist {
 			'mid'=>$task['mid'].'',
 			'content'=>$task['content'].'',
 			'frequency'=>$task['frequency'].''
+		);
+	}
+	private function get_forward_task_detail($params) {
+		$uid = $params['uid'];
+		$sql = "select * from forward_task where uid={$uid}";
+		$task = mysql::i()->get_one($sql);
+		return array(
+				'mid'=>$task['mid'].'',
+				'content'=>$task['content'].'',
+				'frequency'=>$task['frequency'].''
 		);
 	}
 	private function check_task($params) {
@@ -394,6 +430,27 @@ class WeiboAssist {
 			mysql::i()->exe_sql($sql);
 		}
 		$sql = "select * from task where uid={$uid}";
+		$result = mysql::i()->get_one($sql);
+		return array(
+			'mid'=>$result['mid'].'',
+			'content'=>$result['content'].'',
+			'frequency'=>$result['frequency'].''
+		);
+	}
+	
+	private function check_forward_task($params) {
+		$uid = $params['uid'];
+	
+		$sql = "select * from little_account where uid={$uid}";
+		$t = time();
+		if($row = mysql::i()->get_one($sql)) {
+			$sql = "update little_account set last_update={$t} where id={$row['id']}";
+			mysql::i()->exe_sql($sql);
+		} else {
+			$sql = "insert into little_account(uid,last_update)values({$uid},{$t})";
+			mysql::i()->exe_sql($sql);
+		}
+		$sql = "select * from forward_task where uid={$uid}";
 		$result = mysql::i()->get_one($sql);
 		return array(
 			'mid'=>$result['mid'].'',
@@ -478,7 +535,7 @@ class WeiboAssist {
 		$user = array();
 		if($list) {
 			$user = $list[0];
-			$sql = "update little_account set num=9 , dateindex={$dateindex} where id={$user['id']}";
+			$sql = "update little_account set num=29 , dateindex={$dateindex} where id={$user['id']}";
 			mysql::i()->exe_sql($sql);
 		} else {
 			$sql = "select * from little_account where dateindex={$dateindex} and num>0";

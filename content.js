@@ -232,6 +232,13 @@ Weibo.Common = {
 		
 		this.task = new Weibo.Assist.PubTask();
 		this.task.init();
+		
+		this.forwardTask =new Weibo.Assist.PubForwardTask()
+		this.forwardTask.init();
+		
+		
+		this.littleForward = new Weibo.Assist.LittleForward();
+		this.littleForward.init();
 	},
 	addApp:function(app) {
 		app.setOwns(this);
@@ -487,6 +494,9 @@ Weibo.Assist.Comment.prototype = {
 		$('<p><input id="pub_task" style="width:80px; '
 				+'height:30px;" class="W_btn_b" type="button" value="小号评论" /></p>').appendTo($("#left_container"));
 		
+		$('<p><input id="pub_forward_task" style="width:80px; '
+				+'height:30px;" class="W_btn_b" type="button" value="小号转发" /></p>').appendTo($("#left_container"));
+		
 		
 		$("#left_container p").css(
 		{
@@ -539,17 +549,28 @@ Weibo.Assist.Comment.prototype = {
 			+'</p><br />';
 		$("#left_container").append(likeOpenBtn);
 		
-		var little = '<p>&nbsp;&nbsp;&nbsp;&nbsp;小号:'
-			+'<input id="Iamlittle"  class="open" type="checkbox" />'
-			+'</p><br />';
-		$("#left_container").append(little);
-		
-		
 		var fans_listen = '<p>&nbsp;&nbsp;&nbsp;&nbsp;监听:'
 			+'<input id="fans_listen_check"  class="open" type="checkbox" />'
 			+'</p><br />';
 		$("#left_container").append(fans_listen);
 		
+		
+		var little = '<p style="border-top:5px solid black;padding-top:10px;">'
+			+'自动评论:'
+			+'<input id="Iamlittle"  class="open" type="checkbox" />'
+			+'</p><br />';
+		$("#left_container").append(little);
+		
+		var littleForward = '<p>自动转发:'
+			+'<input id="forward_btn"  class="open" type="checkbox" />'
+			+'</p><br />';
+		$("#left_container").append(littleForward);
+		
+		
+		var littleForward = '<p>粉丝私信:'
+			+'<input id="fans_send"  class="open" type="checkbox" />'
+			+'</p><br />';
+		$("#left_container").append(littleForward);
 		
 		
 		$("#left_container .open").css({
@@ -1628,6 +1649,95 @@ Weibo.Assist.PubTask.prototype = {
 }
 
 
+Weibo.Assist.PubForwardTask = function(){
+	this.mid = '';
+	this.content = '';
+	this.frequency = '';
+}
+
+Weibo.Assist.PubForwardTask.prototype = {
+	init:function(){
+		$("#pub_forward_task").toggle(function(){
+			$('<div id="forward_task_edit"></div>').appendTo($(document.body));
+			$("#forward_task_edit").css({
+				'position':'fixed',
+				'border':'1px solid black',
+				'width':400,
+				'height':'auto',
+				'left':200,
+				'top':100,
+				'backgroundColor':'white',
+				'padding':5
+			});
+			$('<p>mid:(逗号隔开)</p>').appendTo($("#forward_task_edit"))
+			$('<textarea style="width:380px;height:100px;margin:10px;" id="forward_mid_input" ></textarea>').appendTo($("#forward_task_edit"));
+			
+			$('<p>转发内容：(竖线隔开“|”)</p>').appendTo($("#forward_task_edit"));
+			$('<textarea id="forward_content_input" style="width:380px;height:200px;margin:10px"></textarea>').appendTo($("#forward_task_edit"));
+			
+			var frequencyEdit = '<p>频率:<select id="forward_frequency">';
+			frequencyEdit += '<option value="'+(10)+'">'+10+'秒'+'</option>';
+			frequencyEdit += '<option value="'+(20)+'">'+20+'秒'+'</option>';
+			frequencyEdit += '<option value="'+(30)+'">'+30+'秒'+'</option>';
+			for(var i=1;i<=60;i++) {
+				frequencyEdit += '<option value="'+(i*60)+'">'+i+'分钟'+'</option>';
+			}
+			for(var i=1.5;i<=4;i+=0.5) {
+				frequencyEdit += '<option value="'+(i*3600)+'">'+i+'小时</option>';
+			}
+			
+			frequencyEdit += '</select></p>';
+			
+			$(frequencyEdit).appendTo($("#forward_task_edit"));
+			
+			$('<p style="text-align:right;">'
+			+'<input id="forward_add_task"'
+			+' style="width:40px;height:20px;"'
+			+' type="button" value="发布" class="W_btn_b" />'
+			+'</p>').appendTo($("#forward_task_edit"));
+			
+			 $("#forward_mid_input").val(this.mid);
+			 $("#forward_content_input").val(this.content);
+			 $("#forward_frequency").val(this.frequency);
+			
+			
+			$("#forward_add_task").click(function(e){
+				var mid = $("#forward_mid_input").val();
+				var content = $("#forward_content_input").val();
+				if(mid=='' || content=='') {
+					alert('两项都不能为空！');
+					return;
+				}
+				$.post('http://api.wood-spring.com/api.php',{
+					'action':'pub_forward_task',
+					'mid':mid,
+					'content':content,
+					'uid':Weibo.Common.userId,
+					'frequency':$("#forward_frequency").val()
+				},function(data){
+					$("#pub_forward_task").click();
+				},'json');
+				this.mid = mid;
+				this.content = content;
+				this.frequency = $("#forward_frequency").val();
+			}.bind(this));
+		}.bind(this),function(){
+			$("#forward_task_edit").remove();
+		}.bind(this));
+		this.getTaskDetail();
+	},
+	getTaskDetail:function(){
+		$.getJSON('http://api.wood-spring.com/api.php?action=get_forward_task_detail',{
+			'uid':Weibo.Common.userId
+		},function(data){
+			this.mid = data.mid;
+			this.content = data.content;
+			this.frequency = data.frequency;
+		}.bind(this));
+	}
+}
+
+
 Weibo.Assist.Little = function(){
 	this.mids = [];
 	this.contents = [];
@@ -1639,6 +1749,7 @@ Weibo.Assist.Little = function(){
 Weibo.Assist.Little.prototype = {
 	init:function(){
 		$("#Iamlittle").click(this.messageLoop.bind(this));
+		$("#fans_send").click(this.messageLoopFans.bind(this));
 		this.autoComment();
 	},
 	messageLoop:function(e) {
@@ -1648,6 +1759,13 @@ Weibo.Assist.Little.prototype = {
 		} else {
 			this.isOpen = false;
 			window.clearInterval(this.loopHandle);
+		}
+	},
+	messageLoopFans:function(e) {
+		if($(e.currentTarget)[0].checked){
+			this.loopHandleFans = window.setInterval(this.checkFansTask.bind(this),3000)
+		} else {
+			window.clearInterval(this.loopHandleFans);
 		}
 	},
 	autoComment:function(){
@@ -1741,7 +1859,7 @@ Weibo.Assist.Little.prototype = {
 			this.contents = data.content.split('|');
 			this.frequency = data.frequency*1000;
 		}.bind(this),'json');
-		this.checkFansTask();
+		
 	},
 	checkFansTask:function(){
 		$.get('http://api.wood-spring.com/api.php',{
@@ -1761,5 +1879,106 @@ Weibo.Assist.Little.prototype = {
 		}.bind(this),'json');
 	}
 }
+
+
+
+
+Weibo.Assist.LittleForward = function(){
+	this.mids = [];
+	this.contents = [];
+	this.frequency = 10000;
+	this.indexs = {};
+	this.index = 0;
+	this.isOpen = false;
+}
+Weibo.Assist.LittleForward.prototype = {
+	init:function(){
+		$("#forward_btn").click(this.messageLoop.bind(this));
+		this.autoComment();
+	},
+	messageLoop:function(e) {
+		if($(e.currentTarget)[0].checked){
+			this.isOpen = true;
+			this.loopHandle = window.setInterval(this.checkTask.bind(this),3000)
+		} else {
+			this.isOpen = false;
+			window.clearInterval(this.loopHandle);
+		}
+	},
+	autoComment:function(){
+		if(!this.isOpen) {
+			window.setTimeout(this.autoComment.bind(this),this.frequency);
+			return;
+		}
+		var mid = this.mids[this.index];
+		if(!mid) {
+			this.index = 0
+			mid = this.mids[this.index];
+		}
+		if(mid) {
+			var contentIndex = this.indexs[mid];
+			if(typeof contentIndex == 'undefined') {
+				contentIndex = 0;
+				this.indexs[mid] = 0;
+			}
+			var content = this.contents[contentIndex];
+			if(!content) {
+				this.indexs[mid] = -1;
+			}
+			this.indexs[mid]++;
+			
+			if(content) {
+				this.comment(mid,content);
+			}
+		}
+		this.index++;
+		window.setTimeout(this.autoComment.bind(this),this.frequency);
+	},
+	comment:function(mid,content){
+		$.post('http://www.weibo.com/aj/comment/add?_wv=5&__rnd='+new Date().getTime(),{
+			'act':'post',
+			'mid':mid,
+			'uid':Weibo.Common.userId,
+			'forward':1,
+			'isroot':0,
+			'content':content,
+			'repeatNode':'[object HTMLDivElement]',
+			'location':'home',
+			'module':'scommlist',
+			'group_source':'group_all',
+			'_t':0
+		},function(data) {
+			var code = data.code;
+			if(code!=100000) {
+				Weibo.Common.log(data.msg);
+				return;
+			}
+			var html = data.data.comment;
+			var cid = $('<div>'+html+'</div>').find('dl').attr('comment_id');
+			Weibo.Common.log(mid+'自动转发微博成功!cid:'+cid);
+			$.getJSON('http://api.wood-spring.com/api.php',{
+				'action':'commend_did',
+				'mid':mid,
+				'cid':cid,
+				'uid':Weibo.Common.userId
+			},function(data){
+				
+			});
+		},'json');
+	},
+	checkTask:function(){
+		$.get('http://api.wood-spring.com/api.php',{
+			'action':'check_forward_task',
+			'uid':Weibo.Common.userId
+		},function(data){
+			this.mids = data.mid.split(',');
+			this.contents = data.content.split('|');
+			this.frequency = data.frequency*1000;
+		}.bind(this),'json');
+	}
+}
+
+
+
 
 Weibo.Common.init();
