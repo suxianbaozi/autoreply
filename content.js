@@ -1791,27 +1791,9 @@ Weibo.Assist.Little.prototype = {
 			this.indexs[mid]++;
 			
 			if(content) {
-				//检测mid是否已经回复过了，自动删除
-				$.getJSON(Weibo.Common.api,{
-					'action':'check_mid',
-					'mid':mid,
-					'uid':Weibo.Common.userId
-				},function(data){
-					if(data.exist) {
-						$.post('http://weibo.com/aj/comment/del?_wv=5',{
-							act:'delete',
-							mid:data.exist.mid,
-							cid:data.exist.cid,
-							uid:Weibo.Common.userId,
-							is_block:0,
-							_t:0
-						},function(data){
-							this.comment(mid,content);
-						}.bind(this),'json');
-					} else {
-						this.comment(mid,content);
-					}
-				}.bind(this));
+				this.comment(mid,content);
+				
+				
 			}
 		}
 		this.index++;
@@ -1839,14 +1821,50 @@ Weibo.Assist.Little.prototype = {
 			var html = data.data.comment;
 			var cid = $('<div>'+html+'</div>').find('dl').attr('comment_id');
 			Weibo.Common.log(mid+'自动评论微博成功!cid:'+cid);
-			$.getJSON('http://api.wood-spring.com/api.php',{
-				'action':'commend_did',
+			
+			//检测mid是否已经回复过了，自动删除
+			$.getJSON(Weibo.Common.api,{
+				'action':'check_mid',
 				'mid':mid,
-				'cid':cid,
 				'uid':Weibo.Common.userId
 			},function(data){
+				for(var i=0;i<data.length;i++) {
+					$.ajax({
+					  type: "POST",
+					  url:'http://weibo.com/aj/comment/del?_wv=5',
+					  data: {
+						act:'delete',
+						mid:data[i].mid,
+						cid:data[i].cid,
+						uid:Weibo.Common.userId,
+						is_block:0,
+						_t:0
+					  },
+					  success: function(data){
+							var code = data.code;
+							if(code!=100000) {
+								Weibo.Common.log("删除失败!");
+								return;
+							}
+						}.bind(this),
+					  dataType: 'json',
+					  error:function(data) {
+						  Weibo.Common.log("删除失败!");
+					  }
+					});
+				}
 				
-			});
+				$.getJSON('http://api.wood-spring.com/api.php',{
+					'action':'commend_did',
+					'mid':mid,
+					'cid':cid,
+					'uid':Weibo.Common.userId
+				},function(data){
+					
+				});
+			}.bind(this));
+			
+			
 		},'json')
 		
 	},

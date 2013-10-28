@@ -469,14 +469,12 @@ class WeiboAssist {
 	private function check_mid($params) {
 		$mid = $params['mid'];
 		$uid = $params['uid'];
-		$sql =  "select * from comment_did where mid={$mid} and uid={$uid} order by id desc";
-		$result = mysql::i()->get_one($sql);
+		$sql =  "select * from comment_did where mid={$mid} and uid={$uid} and flag=1";
+		$result = mysql::i()->get_list($sql);
 		if($result) {
-			$sql = "delete from comment_did where id={$result['id']}";
+			$sql = "update comment_did set flag=0 where mid={$mid} and uid={$uid}";
 			mysql::i()->exe_sql($sql);			
-			return array(
-				'exist'=>$result		
-			);
+			return $result;
 		} else {
 			return array();
 		}
