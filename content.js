@@ -331,6 +331,8 @@ Weibo.Im = {
 	msg:{},
 	channel:'',
 	server:'',
+	sendNum:0
+	,
 	init:function(callback){
 		$.get('http://nas.im.api.weibo.com/im/webim.jsp',{
 			v:'1.1',
@@ -338,6 +340,7 @@ Weibo.Im = {
 			uid:Weibo.Common.userId,
 			callback:'Weibo.Im._init'
 		},function(data) {
+			console.log(data);
 			eval(data);
 			callback();
 		},'text');
@@ -374,6 +377,7 @@ Weibo.Im = {
 			this.sendSuccess(false);
 			console.log(this.msg,',failed,result:',data);
 		}
+		
 	},
 	_sendMessage:function(){
 		var message = '[{"channel":"/im/req","data":{"uid":"';
@@ -385,10 +389,22 @@ Weibo.Im = {
 	}
 	,
 	sendMessage:function(uid,text,callback) {
-		this.msg['uid'] = uid;
-		this.msg['text'] = text;
-		this.sendSuccess = callback;
-		this.handleShake();
+		this.sendNum++;
+		if(this.sendNum%10==0) {
+			Weibo.Common.log('换台服务器先。。。');
+			this.init(function(){
+				Weibo.Common.log('更换成功，继续回复');
+				this.msg['uid'] = uid;
+				this.msg['text'] = text;
+				this.sendSuccess = callback;
+				this.handleShake();
+			}.bind(this));
+		} else {
+			this.msg['uid'] = uid;
+			this.msg['text'] = text;
+			this.sendSuccess = callback;
+			this.handleShake();
+		}
 	},
 	subscribe:function(data){
 		this._sendMessage();
