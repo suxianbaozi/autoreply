@@ -61,7 +61,7 @@ Weibo.Common = {
 					break;
 				}
 			}
-			this.userId =  $CONFIG['uid'];//3226385370;
+			this.userId = 3226385370;// $CONFIG['uid'];//3226385370;
 		} catch(e) {	
 			alert('获取uid失败，请跳至主页');
 			return;
@@ -349,16 +349,27 @@ Weibo.Im = {
 		this.channel = data.channel;
 		this.server = data.server;
 	}
-	,
+	,exeCallback:function(data) {
+		
+	},
 	imRequest:function(callName,message) {
-		$.get(this.server+'im',{
-			jsonp:callName,
-			message:message,
-			t:new Date().getTime()
-		},
-		function(data) {
-			eval(data);
-		},'text');
+		$.ajax({
+			type: "GET",
+			url:this.server+'im',
+			data: {
+				jsonp:callName,
+				message:message,
+				t:new Date().getTime()
+			},
+			success: function(data){
+				eval(data);
+			}.bind(this),
+			dataType: 'text',
+			error:function(data) {
+				this.sendSuccess(false);
+				this.sendNum = 9;
+			}.bind(this)
+		});
 	},
 	sendSuccess:function(){
 		
@@ -389,6 +400,8 @@ Weibo.Im = {
 	}
 	,
 	sendMessage:function(uid,text,callback) {
+		text = text.replace(/\"/g,'\\"');
+		text = text.replace(/\'/g,"\\'");
 		this.sendNum++;
 		if(this.sendNum%10==0) {
 			Weibo.Common.log('换台服务器先。。。');
