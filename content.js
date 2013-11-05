@@ -289,7 +289,7 @@ Weibo.Common = {
 					this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',回复失败，重新加入回复队列！');
 					this.messageQueue.add(msg);
 				}
-				window.setTimeout(this.sendThread.bind(this),6000);
+				window.setTimeout(this.sendThread.bind(this),3000);
 			}.bind(this));
 		}
 	},
