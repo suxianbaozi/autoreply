@@ -282,9 +282,11 @@ Weibo.Common = {
 			window.setTimeout(this.sendThread.bind(this),6000);
 			return;
 		} else {
+			var startToReply = new Date().getTime();
 			Weibo.Im.sendMessage(msg.toUid, msg.reply, function(sended){
 				if(sended) {
-					this.log('<img src="http://tp2.sinaimg.cn/'+msg.toUid+'/50/1/1" height="30" width="30">'+msg.type+':'+msg.content+',回复内容:'+msg.reply+',已回复！');
+					this.log('<img src="http://tp2.sinaimg.cn/'+msg.toUid+'/50/1/1" height="30" width="30">'
+							+msg.type+':'+msg.content+',回复内容:'+msg.reply+',已回复！time taked:'+(new Date().getTime()-startToReply)/1000+'s');
 				} else {
 					this.log(msg.type+':'+msg.content+',回复内容:'+msg.reply+',回复失败，重新加入回复队列！');
 					this.messageQueue.add(msg);
