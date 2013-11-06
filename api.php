@@ -184,8 +184,11 @@ class WeiboAssist {
 			$key_list = mysql::i()->get_list($sql);
 			//print_r($key_list);
 			foreach ($key_list as $word) {
-				if(strpos($message,$word['key'])!==false) {
-					$data[] = $word['text'];
+			    $words = explode(',',$word['key']);    
+			    foreach($words as $key) {
+    				if(strpos($message,$key)!==false) {
+    					$data[] = $word['text'];
+    				}
 				}
 			}
 			if(count($key_list)<1000) {
