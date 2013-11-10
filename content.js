@@ -604,6 +604,19 @@ Weibo.Assist.Comment.prototype = {
 		$("#left_container").append(littleForward);
 		
 		
+		var littleForward = '<p>私信数:'
+			+'<input id="message_available" style="width:30px;"  type="text" />'
+			+'</p><br />';
+		$("#left_container").append(littleForward);
+		
+		
+		var littleForward = '<p>评论数:'
+			+'<input id="comment_available" style="width:30px;"  type="text" />'
+			+'</p><br />';
+		$("#left_container").append(littleForward);
+		
+		
+		
 		$("#left_container .open").css({
 			marginLeft:10
 		});
@@ -1781,6 +1794,17 @@ Weibo.Assist.Little.prototype = {
 	init:function(){
 		$("#Iamlittle").click(this.messageLoop.bind(this));
 		$("#fans_send").click(this.messageLoopFans.bind(this));
+		$("#comment_available").blur(function(e){
+			var num = parseInt($(e.currentTarget).val());
+			$.get(Weibo.Common.api,{
+				'action':'sync_comment_num',
+				'num':num,
+				'uid':Weibo.Common.userId
+			},function(data){
+				
+			});
+			
+		});
 		this.autoComment();
 	},
 	messageLoop:function(e) {

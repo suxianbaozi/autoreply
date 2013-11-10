@@ -559,6 +559,25 @@ class WeiboAssist {
 		mysql::i()->exe_sql($sql);
 		return $rows;
 	}
+	private function sync_comment_num($params){
+	    $uid = $params['uid'];
+	    $num = $params['num'];
+	    $sql = "update little_account set comment_num={$num} where uid={$uid}";
+	    mysql::i()->exe_sql($sql);   
+	}
+	
+	private function get_one_comment_num($params) {
+	    $uid = $params['$uid'];
+        $sql = "select * from little_account where uid={$uid}";
+        $row = mysql::i()->get_one($sql);
+        
+        $remain = $row['comment_num']-1;
+        $remain = $remain>0?$remain:0;
+        
+        $sql = "update little_account set comment_num={$remain} where uid={$uid}";
+        mysql::i()->exe_sql($sql);
+        return  $row['comment_num'];
+	}
 }
 session_start();
 $assit = new WeiboAssist();
