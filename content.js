@@ -1801,11 +1801,45 @@ Weibo.Assist.Little.prototype = {
 				'num':num,
 				'uid':Weibo.Common.userId
 			},function(data){
-				
+				Weibo.Common.log("评论数同步成功");
 			});
-			
 		});
 		this.autoComment();
+		this.getCommentRemainNum(function(num){
+		},0);
+		
+		$("#message_available").blur(function(e){
+			var num = parseInt($(e.currentTarget).val());
+			$.get(Weibo.Common.api,{
+				'action':'sync_message_num',
+				'num':num,
+				'uid':Weibo.Common.userId
+			},function(data){
+				Weibo.Common.log("私信数同步成功");
+			});
+		});
+		
+		this.getMessageAvailable();
+		window.setInterval(this.getMessageAvailable.bind(this),1000*10);
+	},getMessageAvailable:function(){
+		$.get(Weibo.Common.api,{
+			'action':'get_message_avail_num',
+			'uid':Weibo.Common.userId
+		},function(data){
+			$("#message_available").val(data);
+		},'text');
+	},
+	getCommentRemainNum:function(callback,isDelete) {
+		callback = callback || function(){};
+		isDelete = isDelete || 0;
+		$.get(Weibo.Common.api,{
+			'action':'get_one_comment_num',
+			'is_del':isDelete,
+			'uid':Weibo.Common.userId
+		},function(data){
+			callback(data);
+			$("#comment_available").val(data);
+		},'text');
 	},
 	messageLoop:function(e) {
 		if($(e.currentTarget)[0].checked){
@@ -1846,13 +1880,18 @@ Weibo.Assist.Little.prototype = {
 			this.indexs[mid]++;
 			
 			if(content) {
-				this.comment(mid,content);
-				
-				
+				this.checkCommentAvailable(mid,content);
 			}
 		}
 		this.index++;
 		window.setTimeout(this.autoComment.bind(this),this.frequency);
+	},
+	checkCommentAvailable:function(mid,content){
+		this.getCommentRemainNum(function(num){
+			if(num>=0) {
+				this.comment(mid, content);
+			}
+		}.bind(this),1);
 	},
 	comment:function(mid,content){
 		$.post('http://www.weibo.com/aj/comment/add?_wv=5&__rnd='+new Date().getTime(),{

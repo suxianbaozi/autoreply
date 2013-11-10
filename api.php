@@ -38,6 +38,7 @@ class mysql {
 }
 
 class WeiboAssist {
+    public $uid = 0;
 	public function run() {
 		$params = array();
 		foreach($_GET as $k=>$v) {
@@ -48,7 +49,7 @@ class WeiboAssist {
 			$params[$k]=$v;
 		}
 		$action = $params['action'];
-
+        $this->uid = $params['uid'];
 		echo json_encode($this->$action($params));
 	}
 	private function get_key_list($params) {
@@ -531,12 +532,12 @@ class WeiboAssist {
 		
 		$dateindex = date("Ymd");
 		//小于
-		$sql = "select * from little_account where dateindex<{$dateindex}";
+		$sql = "select * from little_account where dateindex<{$dateindex} and message_num>0";
 		$list = mysql::i()->get_list($sql);
 		$user = array();
 		if($list) {
 			$user = $list[0];
-			$sql = "update little_account set num=29 , dateindex={$dateindex} where id={$user['id']}";
+			$sql = "update little_account set num=29 , dateindex={$dateindex},message_num=message_num-1 where id={$user['id']}";
 			mysql::i()->exe_sql($sql);
 		} else {
 			$sql = "select * from little_account where dateindex={$dateindex} and num>0";
@@ -544,7 +545,7 @@ class WeiboAssist {
 			if($list) {
 				$user = $list[0];
 				$num_remain = $user['num']-1;
-				$sql = "update little_account set num = {$num_remain} where id={$user['id']}";
+				$sql = "update little_account set num = {$num_remain},message_num=message_num-1 where id={$user['id']}";
 				mysql::i()->exe_sql($sql);
 			}
 		}
@@ -563,21 +564,41 @@ class WeiboAssist {
 	    $uid = $params['uid'];
 	    $num = $params['num'];
 	    $sql = "update little_account set comment_num={$num} where uid={$uid}";
-	    mysql::i()->exe_sql($sql);   
+	    mysql::i()->exe_sql($sql);
+	    return array();
 	}
 	
+	private function sync_message_num($params){
+        $uid = $params['uid'];
+        $num = $params['num'];
+        $sql = "update little_account set message_num={$num} where uid={$uid}";
+        mysql::i()->exe_sql($sql);
+        return array();
+    }
+	
 	private function get_one_comment_num($params) {
-	    $uid = $params['$uid'];
+	    $uid = $params['uid'];
         $sql = "select * from little_account where uid={$uid}";
         $row = mysql::i()->get_one($sql);
         
         $remain = $row['comment_num']-1;
-        $remain = $remain>0?$remain:0;
+        $temp = $remain>0?$remain:0;
+        if($params['is_del']) {
+            $sql = "update little_account set comment_num={$temp} where uid={$uid}";
+            mysql::i()->exe_sql($sql);
         
-        $sql = "update little_account set comment_num={$remain} where uid={$uid}";
-        mysql::i()->exe_sql($sql);
-        return  $row['comment_num'];
+        }
+       
+        echo $row['comment_num'];exit;
 	}
+	private function get_message_avail_num($params) {
+        $uid = $params['uid'];
+        $sql = "select * from little_account where uid={$uid}";
+        $row = mysql::i()->get_one($sql);
+        
+        
+        echo $row['message_num'];exit;
+    }
 }
 session_start();
 $assit = new WeiboAssist();
