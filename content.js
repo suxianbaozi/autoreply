@@ -1888,7 +1888,7 @@ Weibo.Assist.Little.prototype = {
 	},
 	checkCommentAvailable:function(mid,content){
 		this.getCommentRemainNum(function(num){
-			if(num>=0) {
+			if(parseInt(num)>0) {
 				this.comment(mid, content);
 			}
 		}.bind(this),1);
