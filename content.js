@@ -714,15 +714,15 @@ Weibo.Assist.Comment.prototype = {
 		var action = $('<div class="action"></div>');
 		keyBox.append(action);
 		
-//		var addBtn = $('<input type="button" class="W_btn_a" value="+" />');
-//		action.append(addBtn);
-//		addBtn.css({
-//			'width':20,
-//			'height':20,
-//			'margin-left':5
-//		});
-//		addBtn.unbind('click');
-//		addBtn.click(this.addKey.bind(this));
+		var addBtn = $('<input type="button" class="W_btn_a" value="+" />');
+		action.append(addBtn);
+		addBtn.css({
+			'width':20,
+			'height':20,
+			'margin-left':5
+		});
+		addBtn.unbind('click');
+		addBtn.click(this.addKey.bind(this));
 		
 		keyBox.css({
 			'position':'fixed',
